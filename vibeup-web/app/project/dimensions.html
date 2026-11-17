@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Dimensions | VibeUp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app.css">
+    <style>
+        .dims-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+        .dims-form { display: flex; flex-direction: column; gap: 0; }
+
+        .bhk-selector { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .bhk-option {
+            padding: 14px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .bhk-option:hover { border-color: var(--glass-border-hover); }
+        .bhk-option.active { border-color: var(--accent); background: var(--accent-glow); color: var(--accent); }
+
+        .room-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+        .room-item {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .room-item:hover { border-color: var(--glass-border-hover); }
+        .room-item.active { border-color: var(--accent); background: rgba(201,168,76,0.05); }
+        .room-item-name { font-weight: 600; font-size: 14px; flex: 1; }
+        .room-item-dims { display: flex; gap: 8px; }
+        .room-dim-input {
+            width: 70px;
+            background: var(--bg-input);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            padding: 8px 10px;
+            font-size: 13px;
+            color: var(--text-primary);
+            text-align: center;
+            outline: none;
+        }
+        .room-dim-input:focus { border-color: var(--accent); }
+        .room-item-name-input { font-weight: 600; font-size: 14px; flex: 1; border: none; background: transparent; outline: none; color: var(--text-primary); padding: 0; }
+        .add-room-btn { width: 100%; border: 1px dashed var(--glass-border); padding: 12px; background: transparent; color: var(--text-secondary); border-radius: var(--radius-lg); cursor: pointer; transition: all 0.3s; margin-top: 16px; font-weight: 500;}
+        .add-room-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(201,168,76,0.05); }
+
+        .preview-3d {
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-2xl);
+            height: 100%;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .preview-3d-label {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(0,0,0,0.6);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            color: var(--text-secondary);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .preview-3d canvas { border-radius: var(--radius-2xl); }
+
+        .btn-row { display: flex; gap: 12px; margin-top: 24px; }
+
+        @media (max-width: 900px) {
+            .dims-layout { grid-template-columns: 1fr; }
+        }
+
+        .fade-up { opacity: 0; transform: translateY(16px); animation: fadeUp 0.5s var(--ease-out-expo) forwards; }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <div class="main-content">
+            <a class="page-back" onclick="history.back()" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--text-muted); cursor:pointer; margin-bottom:24px">← Back</a>
+            
+            <h1 style="font-size:1.6rem; font-weight:700; margin-bottom:4px" class="fade-up" id="page-title">Room Dimensions</h1>
+            <p style="font-size:14px; color:var(--text-secondary)" class="fade-up delay-1" id="page-subtitle">Enter the dimensions to generate your 3D room</p>
+
+            <div class="dims-layout">
+                <!-- Left: Form -->
+                <div class="dims-form fade-up delay-1">
+                    <!-- BHK Selector (House mode only) -->
+                    <div id="bhk-section" style="display:none">
+                        <label class="form-label" style="margin-bottom:12px">Select Layout</label>
+                        <div class="bhk-selector">
+                            <div class="bhk-option active" data-bhk="1" onclick="selectBHK(1)">1 BHK</div>
+                            <div class="bhk-option" data-bhk="2" onclick="selectBHK(2)">2 BHK</div>
+                            <div class="bhk-option" data-bhk="3" onclick="selectBHK(3)">3 BHK</div>
+                            <div class="bhk-option" data-bhk="4" onclick="selectBHK(4)">4 BHK</div>
+                            <div class="bhk-option" data-bhk="5" onclick="selectBHK(5)">5 BHK</div>
+                        </div>
+                        <div class="room-list" id="room-list"></div>
+                        <button id="add-room-btn" class="add-room-btn" style="display:none;" onclick="addExtraRoom()">+ Add Extra Room</button>
+                    </div>
+
+                    <!-- Single Room mode -->
+                    <div id="single-room-section">
+                        <div class="form-group">
+                            <label class="form-label" for="room-name">Room Name</label>
+                            <input type="text" class="form-input" id="room-name" placeholder="e.g. Living Room" value="Living Room">
+                        </div>
+
+                        <div style="display:flex; gap:12px">
+                            <div class="form-group" style="flex:1">
+                                <label class="form-label" for="room-width">Width (ft)</label>
+                                <input type="number" class="form-input" id="room-width" value="14" min="5" max="50" oninput="updatePreview()">
+                            </div>
+                            <div class="form-group" style="flex:1">
+                                <label class="form-label" for="room-length">Length (ft)</label>
+                                <input type="number" class="form-input" id="room-length" value="12" min="5" max="50" oninput="updatePreview()">
+                            </div>
+                            <div class="form-group" style="flex:1">
+                                <label class="form-label" for="room-height">Height (ft)</label>
+                                <input type="number" class="form-input" id="room-height" value="10" min="8" max="20" oninput="updatePreview()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btn-row">
+                        <button class="btn btn-primary btn-lg" style="flex:1" onclick="proceedToWorkspace()">
+                            Generate 3D Model →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: 3D Preview -->
+                <div class="preview-3d fade-up delay-2" id="preview-container">
+                    <div class="preview-3d-label">Live Preview</div>
+                    <canvas id="preview-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="../app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) {}
+        const user = Auth.getUser();
+        renderSidebar('new-project', user.role);
+
+        const params = new URLSearchParams(location.search);
+        const projectType = params.get('type') || 'room';
+
+        // ─── BHK Layouts (Configuration first) ───
+        const bhkLayouts = {
+            1: ['Living Room', 'Kitchen', 'Bedroom', 'Bathroom'],
+            2: ['Living Room', 'Kitchen', 'Bedroom 1', 'Bedroom 2', 'Bathroom 1', 'Bathroom 2'],
+            3: ['Living Room', 'Kitchen', 'Bedroom 1', 'Bedroom 2', 'Bedroom 3', 'Bathroom 1', 'Bathroom 2', 'Balcony'],
+            4: ['Living Room', 'Dining Room', 'Kitchen', 'Bedroom 1', 'Bedroom 2', 'Bedroom 3', 'Bedroom 4', 'Bathroom 1', 'Bathroom 2', 'Bathroom 3', 'Balcony'],
+            5: ['Living Room', 'Dining Room', 'Kitchen', 'Master Bedroom', 'Bedroom 2', 'Bedroom 3', 'Bedroom 4', 'Bedroom 5', 'Bathroom 1', 'Bathroom 2', 'Bathroom 3', 'Bathroom 4', 'Balcony 1', 'Balcony 2'],
+            'commercial': ['Reception', 'Work Area', 'Meeting Room', 'Manager Cabin', 'Restroom'],
+            'ai_floorplan': [] // Handled dynamically if needed
+        };
+
+        if (projectType === 'house') {
+            document.getElementById('page-title').textContent = 'House Setup';
+            document.getElementById('page-subtitle').textContent = 'Choose your BHK layout and set room dimensions';
+            document.getElementById('bhk-section').style.display = 'block';
+            document.getElementById('single-room-section').style.display = 'none';
+        } else if (projectType === 'commercial') {
+            document.getElementById('page-title').textContent = 'Commercial Layout Setup';
+            document.getElementById('page-subtitle').textContent = 'Configure standard commercial spaces or add custom ones';
+            document.getElementById('bhk-section').style.display = 'block';
+            document.getElementById('single-room-section').style.display = 'none';
+            document.querySelector('.bhk-selector').style.display = 'none';
+            document.querySelector('#bhk-section .form-label').style.display = 'none';
+        }
+
+        let selectedBHK = projectType === 'commercial' ? 'commercial' : 1;
+
+        function selectBHK(n) {
+            selectedBHK = n;
+            document.querySelectorAll('.bhk-option').forEach(el => {
+                el.classList.toggle('active', el.dataset.bhk === String(n));
+            });
+            renderRoomList(n);
+            
+            // Show Add Extra Room button for 5 BHK and commercial
+            if (n === 5 || n === 'commercial') {
+                document.getElementById('add-room-btn').style.display = 'block';
+            } else {
+                document.getElementById('add-room-btn').style.display = 'none';
+            }
+        }
+
+        let activeRoomIndex = 0;
+
+        function renderRoomList(bhk) {
+            const rooms = bhkLayouts[bhk];
+            const listEl = document.getElementById('room-list');
+            listEl.innerHTML = rooms.map((name, i) => `
+                <div class="room-item ${i === 0 ? 'active' : ''}" id="room-item-${i}" onclick="setActiveRoom(${i})">
+                    <span class="room-item-name">${name}</span>
+                    <div class="room-item-dims">
+                        <input type="number" class="room-dim-input w-input" value="${10 + Math.floor(Math.random()*6)}" min="5" max="30" placeholder="W" data-room="${i}" data-dim="w" oninput="updatePreview()">
+                        <span style="color:var(--text-dim)">×</span>
+                        <input type="number" class="room-dim-input l-input" value="${10 + Math.floor(Math.random()*6)}" min="5" max="30" placeholder="L" data-room="${i}" data-dim="l" oninput="updatePreview()">
+                        <span style="color:var(--text-dim); font-size:11px">ft</span>
+                    </div>
+                </div>
+            `).join('');
+            setActiveRoom(0);
+        }
+
+        let extraRoomCount = 0;
+        function addExtraRoom() {
+            extraRoomCount++;
+            const listEl = document.getElementById('room-list');
+            const roomIndex = listEl.children.length;
+            const newRoomHtml = `
+                <div class="room-item fade-up" style="animation-duration:0.3s" id="room-item-${roomIndex}" onclick="setActiveRoom(${roomIndex})">
+                    <input type="text" class="room-item-name-input" placeholder="Room Name" value="Custom Room ${extraRoomCount}" oninput="updatePreview()">
+                    <div class="room-item-dims">
+                        <input type="number" class="room-dim-input w-input" value="12" min="5" max="50" placeholder="W" data-room="${roomIndex}" data-dim="w" oninput="updatePreview()">
+                        <span style="color:var(--text-dim)">×</span>
+                        <input type="number" class="room-dim-input l-input" value="12" min="5" max="50" placeholder="L" data-room="${roomIndex}" data-dim="l" oninput="updatePreview()">
+                        <span style="color:var(--text-dim); font-size:11px">ft</span>
+                    </div>
+                </div>
+            `;
+            listEl.insertAdjacentHTML('beforeend', newRoomHtml);
+            setActiveRoom(roomIndex);
+        }
+
+        function setActiveRoom(index) {
+            activeRoomIndex = index;
+            document.querySelectorAll('.room-item').forEach(el => el.classList.remove('active'));
+            const activeEl = document.getElementById(`room-item-${index}`);
+            if (activeEl) activeEl.classList.add('active');
+            
+            updatePreview();
+        }
+
+        // ─── 3D Preview ───
+        let pScene, pCamera, pRenderer, pRoom;
+
+        function initPreview() {
+            const container = document.getElementById('preview-container');
+            const canvas = document.getElementById('preview-canvas');
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+
+            pScene = new THREE.Scene();
+            pScene.background = new THREE.Color(0x111111);
+            pScene.fog = new THREE.Fog(0x111111, 8, 30);
+
+            pCamera = new THREE.PerspectiveCamera(50, w / h, 0.1, 100);
+            pCamera.position.set(6, 5, 8);
+            pCamera.lookAt(0, 1, 0);
+
+            pRenderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            pRenderer.setSize(w, h);
+            pRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            // Lights
+            pScene.add(new THREE.AmbientLight(0x888899, 0.3));
+            const spot = new THREE.SpotLight(0xfff5e0, 1.5, 0, 0.6, 0.8);
+            spot.position.set(4, 8, 6);
+            pScene.add(spot);
+
+            // Grid
+            const grid = new THREE.GridHelper(20, 20, 0x333333, 0x1a1a1a);
+            pScene.add(grid);
+
+            updatePreview();
+            animatePreview();
+        }
+
+        function updatePreview() {
+            if (!pScene) return;
+            if (pRoom) pScene.remove(pRoom);
+
+            let w = 14, l = 12, h = 10, roomName = 'Room';
+            
+            if (projectType === 'house' || projectType === 'commercial') {
+                const activeEl = document.getElementById(`room-item-${activeRoomIndex}`);
+                if (activeEl) {
+                    w = parseFloat(activeEl.querySelector('.w-input')?.value || 14);
+                    l = parseFloat(activeEl.querySelector('.l-input')?.value || 12);
+                    const nameSpan = activeEl.querySelector('.room-item-name');
+                    const nameInput = activeEl.querySelector('.room-item-name-input');
+                    roomName = nameSpan ? nameSpan.textContent : (nameInput ? nameInput.value : roomName);
+                }
+            } else {
+                w = parseFloat(document.getElementById('room-width')?.value || 14);
+                l = parseFloat(document.getElementById('room-length')?.value || 12);
+                h = parseFloat(document.getElementById('room-height')?.value || 10);
+                roomName = document.getElementById('room-name')?.value || 'Living Room';
+            }
+            
+            if(document.querySelector('.preview-3d-label')) {
+                document.querySelector('.preview-3d-label').textContent = `Live Preview: ${roomName}`;
+            }
+
+            w = w / 4;
+            l = l / 4;
+            h = h / 4;
+
+            pRoom = new THREE.Group();
+
+            // Floor
+            const floorGeo = new THREE.PlaneGeometry(w, l);
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x2a1f14, roughness: 0.6 });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            pRoom.add(floor);
+
+            // Walls (wireframe edges)
+            const wallMat = new THREE.LineBasicMaterial({ color: 0xc9a84c });
+            const boxGeo = new THREE.BoxGeometry(w, h, l);
+            const edges = new THREE.EdgesGeometry(boxGeo);
+            const wireframe = new THREE.LineSegments(edges, wallMat);
+            wireframe.position.y = h / 2;
+            pRoom.add(wireframe);
+
+            // Solid walls (translucent)
+            const solidMat = new THREE.MeshPhysicalMaterial({ color: 0x1a1a1c, transparent: true, opacity: 0.3, side: THREE.BackSide });
+            const solidWalls = new THREE.Mesh(boxGeo, solidMat);
+            solidWalls.position.y = h / 2;
+            pRoom.add(solidWalls);
+
+            pScene.add(pRoom);
+        }
+
+        let previewAngle = 0;
+        function animatePreview() {
+            requestAnimationFrame(animatePreview);
+            previewAngle += 0.003;
+            if (pCamera) {
+                pCamera.position.x = Math.sin(previewAngle) * 10;
+                pCamera.position.z = Math.cos(previewAngle) * 10;
+                pCamera.lookAt(0, 1.2, 0);
+            }
+            if (pRenderer && pScene && pCamera) pRenderer.render(pScene, pCamera);
+        }
+
+        function proceedToWorkspace() {
+            if (projectType === 'house' || projectType === 'commercial') {
+                // Collect all room data
+                const rooms = [];
+                document.querySelectorAll('.room-item').forEach(el => {
+                    const nameSpan = el.querySelector('.room-item-name');
+                    const nameInput = el.querySelector('.room-item-name-input');
+                    const name = nameSpan ? nameSpan.textContent : nameInput.value;
+                    const w = el.querySelector('[data-dim="w"]').value;
+                    const l = el.querySelector('[data-dim="l"]').value;
+                    rooms.push({ name, width: parseInt(w), length: parseInt(l), height: 10 });
+                });
+                sessionStorage.setItem('vibeup_house_rooms', JSON.stringify(rooms));
+                sessionStorage.setItem('vibeup_bhk', selectedBHK);
+                navigateTo('app/project/room-tiles.html?bhk=' + selectedBHK);
+            } else {
+                const name = document.getElementById('room-name').value || 'Living Room';
+                const w = document.getElementById('room-width').value;
+                const l = document.getElementById('room-length').value;
+                const h = document.getElementById('room-height').value;
+                navigateTo(`app/project/workspace.html?type=room&name=${encodeURIComponent(name)}&w=${w}&l=${l}&h=${h}`);
+            }
+        }
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            if (!pRenderer || !pCamera) return;
+            const c = document.getElementById('preview-container');
+            pCamera.aspect = c.clientWidth / c.clientHeight;
+            pCamera.updateProjectionMatrix();
+            pRenderer.setSize(c.clientWidth, c.clientHeight);
+        });
+
+        setTimeout(() => {
+            initPreview();
+            if (projectType === 'house') selectBHK(1);
+            else if (projectType === 'commercial') selectBHK('commercial');
+        }, 100);
+    </script>
+</body>
+</html>

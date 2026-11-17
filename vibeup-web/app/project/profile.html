@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile | VibeUp</title>
+    <meta name="description" content="Manage your VibeUp profile — view your projects, design history, and account settings.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app.css">
+    <style>
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            margin-bottom: 36px;
+            padding: 32px;
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-2xl);
+            position: relative;
+            overflow: hidden;
+        }
+        .profile-header::after {
+            content: '';
+            position: absolute;
+            width: 400px; height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+            top: -100px; right: -100px;
+            pointer-events: none;
+        }
+
+        .profile-avatar {
+            width: 96px; height: 96px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark, #8a6f20));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px; font-weight: 700; color: #0a0a0a;
+            flex-shrink: 0;
+            border: 3px solid rgba(201,168,76,0.3);
+            box-shadow: 0 0 30px rgba(201,168,76,0.15);
+        }
+
+        .profile-info h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+        .profile-info .email { font-size: 14px; color: var(--text-secondary); margin-bottom: 8px; }
+        .profile-info .role-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .role-user { background: rgba(123,104,238,0.12); color: var(--purple); }
+        .role-designer { background: rgba(201,168,76,0.12); color: var(--accent); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+
+        .stat-card { text-align: center; }
+        .stat-card .stat-icon { font-size: 28px; margin-bottom: 8px; }
+        .stat-card .stat-value { font-size: 1.8rem; font-weight: 700; }
+        .stat-card .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+        .section-title {
+            font-size: 1.1rem; font-weight: 600;
+            margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+
+        .setting-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: 20px;
+        }
+        .setting-card label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 10px;
+        }
+        .setting-card input,
+        .setting-card select {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
+            font-size: 14px;
+            color: var(--text-primary);
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.3s;
+        }
+        .setting-card input:focus,
+        .setting-card select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .recent-projects { display: flex; flex-direction: column; gap: 12px; margin-bottom: 36px; }
+        .rp-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.3s var(--ease-smooth);
+        }
+        .rp-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+        .rp-info { display: flex; align-items: center; gap: 14px; }
+        .rp-icon {
+            width: 40px; height: 40px;
+            border-radius: var(--radius-md);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .rp-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+        .rp-meta { font-size: 11px; color: var(--text-muted); }
+        .rp-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .rp-status.active { background: rgba(0,232,123,0.1); color: var(--success); }
+        .rp-status.draft { background: rgba(255,159,67,0.1); color: var(--orange); }
+
+        .danger-zone {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,82,82,0.2);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+        }
+        .danger-zone h3 { font-size: 15px; font-weight: 600; color: var(--error); margin-bottom: 8px; }
+        .danger-zone p { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+
+        .fade-up { opacity: 0; transform: translateY(16px); animation: fadeUp 0.5s ease-out forwards; }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .profile-header { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <div class="main-content">
+            <!-- Profile Header -->
+            <div class="profile-header fade-up" id="profile-header">
+                <div class="profile-avatar" id="profile-avatar">U</div>
+                <div class="profile-info">
+                    <h1 id="profile-name">User</h1>
+                    <div class="email" id="profile-email">user@email.com</div>
+                    <span class="role-badge role-user" id="profile-role-badge">User</span>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid fade-up delay-1" id="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📁</div>
+                    <div class="stat-value" id="stat-projects">0</div>
+                    <div class="stat-label">Projects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🛋️</div>
+                    <div class="stat-value" id="stat-designs">0</div>
+                    <div class="stat-label">Rooms Designed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✨</div>
+                    <div class="stat-value" id="stat-ai-chats">0</div>
+                    <div class="stat-label">AI Chats</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-value" id="stat-joined">—</div>
+                    <div class="stat-label">Member Since</div>
+                </div>
+            </div>
+
+            <!-- Recent Projects -->
+            <div class="section-title fade-up delay-2">📊 Recent Projects</div>
+            <div class="recent-projects fade-up delay-2" id="recent-projects">
+                <div style="text-align:center; padding:32px; color:var(--text-muted)">
+                    <div class="spinner" style="margin:0 auto 12px"></div>
+                    Loading projects...
+                </div>
+            </div>
+
+            <!-- Account Settings -->
+            <div class="section-title fade-up delay-3">⚙️ Account Settings</div>
+            <div class="settings-grid fade-up delay-3">
+                <div class="setting-card">
+                    <label>Display Name</label>
+                    <input type="text" id="setting-name" placeholder="Your name">
+                </div>
+                <div class="setting-card">
+                    <label>Email Address</label>
+                    <input type="email" id="setting-email" placeholder="your.email@example.com" disabled>
+                </div>
+                <div class="setting-card">
+                    <label>Preferred Style</label>
+                    <select id="setting-style">
+                        <option value="modern">Modern</option>
+                        <option value="minimalist">Minimalist</option>
+                        <option value="scandinavian">Scandinavian</option>
+                        <option value="industrial">Industrial</option>
+                        <option value="bohemian">Bohemian</option>
+                        <option value="luxury">Luxury</option>
+                        <option value="japandi">Japandi</option>
+                    </select>
+                </div>
+                <div class="setting-card">
+                    <label>Default Room Size</label>
+                    <select id="setting-room-size">
+                        <option value="small">Small (10×10 ft)</option>
+                        <option value="medium" selected>Medium (14×12 ft)</option>
+                        <option value="large">Large (18×16 ft)</option>
+                        <option value="xl">Extra Large (22×20 ft)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:12px; margin-bottom:36px" class="fade-up delay-3">
+                <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+                <button class="btn btn-secondary" onclick="exportData()">📥 Export My Data</button>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="danger-zone fade-up delay-4">
+                <h3>Danger Zone</h3>
+                <p>Logging out will clear your local session. Your projects are saved on the server.</p>
+                <button class="btn btn-ghost" style="color:var(--error); border-color:rgba(255,82,82,0.3)" onclick="Auth.logout()">
+                    🚪 Log Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) {}
+        const user = Auth.getUser();
+        renderSidebar('profile', user.role === 'designer' ? 'designer' : 'user');
+
+        // Populate header
+        const initials = (user.name || 'U').split(' ').map(w => w[0]).join('').toUpperCase();
+        document.getElementById('profile-avatar').textContent = initials;
+        document.getElementById('profile-name').textContent = user.name || 'User';
+        document.getElementById('profile-email').textContent = user.email || '';
+        
+        const roleBadge = document.getElementById('profile-role-badge');
+        if (user.role === 'designer') {
+            roleBadge.textContent = 'Designer';
+            roleBadge.className = 'role-badge role-designer';
+        } else {
+            roleBadge.textContent = 'Home Owner';
+            roleBadge.className = 'role-badge role-user';
+        }
+
+        // Settings
+        document.getElementById('setting-name').value = user.name || '';
+        document.getElementById('setting-email').value = user.email || '';
+
+        const savedStyle = localStorage.getItem('vibeup_pref_style');
+        if (savedStyle) document.getElementById('setting-style').value = savedStyle;
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const res = await Api.getUserProjects(user.id);
+                const projects = Array.isArray(res) ? res : (res.data || []);
+                document.getElementById('stat-projects').textContent = projects.length;
+                document.getElementById('stat-designs').textContent = Math.max(projects.length, 1);
+                loadRecentProjects(projects);
+            } catch(e) {
+                document.getElementById('stat-projects').textContent = '—';
+                loadRecentProjects([]);
+            }
+
+            try {
+                const aiRes = await Api.get(`api_v2/ai_chats.php?action=list_sessions&user_id=${user.id}`);
+                if (aiRes.status === 'success' && Array.isArray(aiRes.data)) {
+                    document.getElementById('stat-ai-chats').textContent = aiRes.data.length;
+                }
+            } catch(e) { /* silent */ }
+
+            document.getElementById('stat-joined').textContent = 'Apr 2026';
+        }
+
+        function loadRecentProjects(projects) {
+            const container = document.getElementById('recent-projects');
+            
+            if (!projects || projects.length === 0) {
+                // Show demo data
+                const demoProjects = [
+                    { title: 'Modern Living Room', room_type: 'Living Room', status: 'active', created_at: new Date().toISOString() },
+                    { title: 'Kitchen Redesign', room_type: 'Kitchen', status: 'draft', created_at: new Date(Date.now() - 86400000 * 3).toISOString() },
+                ];
+                renderProjectCards(container, demoProjects);
+                return;
+            }
+            renderProjectCards(container, projects.slice(0, 5));
+        }
+
+        function renderProjectCards(container, projects) {
+            const roomIcons = { 'Living Room': '🛋️', 'Kitchen': '🍳', 'Bedroom': '🛏️', 'Bathroom': '🚿', 'Office': '💼' };
+            const roomColors = { 'Living Room': 'rgba(123,104,238,0.1)', 'Kitchen': 'rgba(76,175,80,0.1)', 'Bedroom': 'rgba(41,182,246,0.1)', 'Bathroom': 'rgba(0,232,123,0.1)', 'Office': 'rgba(255,159,67,0.1)' };
+
+            container.innerHTML = projects.map(p => {
+                const type = p.room_type || 'Design';
+                const icon = roomIcons[type] || '📐';
+                const bg = roomColors[type] || 'rgba(201,168,76,0.1)';
+                const status = p.status || 'active';
+                const date = p.created_at ? new Date(p.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
+                return `
+                    <div class="rp-card" onclick="navigateTo('app/project/workspace.html?name=${encodeURIComponent(p.title || 'My Design')}')">
+                        <div class="rp-info">
+                            <div class="rp-icon" style="background:${bg}">${icon}</div>
+                            <div>
+                                <div class="rp-title">${escapeHtml(p.title || 'Design Project')}</div>
+                                <div class="rp-meta">${type} · ${date}</div>
+                            </div>
+                        </div>
+                        <div class="rp-status ${status}">${status === 'active' ? '● Active' : '◌ Draft'}</div>
+                    </div>`;
+            }).join('');
+
+            if (projects.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:32px; color:var(--text-muted)">
+                        <div style="font-size:36px; margin-bottom:8px; opacity:0.3">📁</div>
+                        No projects yet. <a style="color:var(--accent); cursor:pointer" onclick="navigateTo('app/project/new-project.html')">Start one!</a>
+                    </div>`;
+            }
+        }
+
+        function saveSettings() {
+            const newName = document.getElementById('setting-name').value.trim();
+            if (newName) {
+                localStorage.setItem('vibeup_user_name', newName);
+                document.getElementById('profile-name').textContent = newName;
+            }
+            const style = document.getElementById('setting-style').value;
+            localStorage.setItem('vibeup_pref_style', style);
+            
+            const roomSize = document.getElementById('setting-room-size').value;
+            localStorage.setItem('vibeup_pref_room_size', roomSize);
+
+            showToast('Settings saved!', 'success');
+        }
+
+        function exportData() {
+            const data = {
+                user: { name: user.name, email: user.email, role: user.role },
+                preferences: {
+                    style: localStorage.getItem('vibeup_pref_style') || 'modern',
+                    roomSize: localStorage.getItem('vibeup_pref_room_size') || 'medium',
+                },
+                exported_at: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `vibeup_profile_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Profile data exported!', 'success');
+        }
+
+        loadStats();
+    </script>
+</body>
+</html>

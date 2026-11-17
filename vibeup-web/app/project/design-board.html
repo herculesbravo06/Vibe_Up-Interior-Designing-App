@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Board | VibeUp Premium</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app.css">
+    <style>
+        :root {
+            --accent: #d4af37;
+            --accent-glow: rgba(212, 175, 55, 0.15);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        body { background: #0a0a0c; color: #fff; font-family: 'Outfit', sans-serif; }
+
+        .board-header { margin-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-end; padding: 20px 0; border-bottom: 1px solid var(--glass-border); }
+        .board-title { font-size: 32px; font-weight: 700; color: #fff; margin: 0; }
+        
+        /* CATEGORY SECTIONING */
+        .category-section { margin-bottom: 60px; }
+        .category-header {
+            display: flex; align-items: center; gap: 15px; margin-bottom: 24px;
+            padding-bottom: 12px; border-bottom: 1px solid var(--glass-border);
+        }
+        .category-icon { font-size: 24px; }
+        .category-name { font-size: 20px; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; }
+        .category-count { background: var(--glass); padding: 4px 12px; border-radius: 20px; font-size: 12px; color: rgba(255,255,255,0.4); }
+
+        .board-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px;
+        }
+
+        .board-card {
+            background: var(--glass); border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg); overflow: hidden; position: relative;
+            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        .board-card:hover { transform: translateY(-8px); border-color: var(--accent); background: rgba(255,255,255,0.06); }
+
+        .card-img { height: 220px; width: 100%; object-fit: cover; transition: transform 0.5s; }
+        .board-card:hover .card-img { transform: scale(1.05); }
+        
+        .card-content { padding: 24px; }
+        .card-title { font-size: 17px; font-weight: 600; margin-bottom: 8px; color: #fff; }
+        .card-price { font-size: 16px; color: var(--accent); font-weight: 700; margin-bottom: 20px; }
+
+        .card-remove {
+            position: absolute; top: 12px; right: 12px;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(0,0,0,0.6); color: #ff4d4d;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; backdrop-filter: blur(8px); transition: all 0.2s; z-index: 10;
+        }
+        .card-remove:hover { background: #ff4d4d; color: #fff; }
+
+        .empty-state {
+            text-align: center; padding: 100px 20px;
+            background: var(--glass); border: 1px dashed var(--glass-border);
+            border-radius: var(--radius-lg); color: rgba(255,255,255,0.4);
+        }
+
+        .fade-up { opacity: 0; transform: translateY(16px); animation: fadeUp 0.6s var(--ease-out-expo) forwards; }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+        .btn-atelier { background: var(--accent); color: #000; border: none; padding: 12px 24px; border-radius: 30px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .btn-atelier:hover { opacity: 0.9; transform: scale(1.02); }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <div class="main-content">
+            <!-- HEADER -->
+            <div class="board-header fade-up">
+                <div>
+                    <div style="font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 8px;">Workspace Design Board</div>
+                    <h1 class="board-title">My Curated Visions</h1>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-glass" onclick="exportToPDF()">📄 Export Portfolio</button>
+                    <button class="btn-atelier" onclick="window.location.href='../catalogue/index.html'">+ Add Selection</button>
+                </div>
+            </div>
+
+            <!-- CONTENT FLOW -->
+            <div id="board-container" class="fade-up" style="animation-delay: 0.2s">
+                <!-- Data grouped by category -->
+            </div>
+        </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        Auth.requireAuth();
+        const user = Auth.getUser();
+        renderSidebar('design-board', user.role);
+        
+        // Globally accessible items for PDF
+        let boardItems = [];
+
+        async function loadBoard() {
+            try {
+                const container = document.getElementById('board-container');
+                container.innerHTML = '<div style="text-align:center; padding: 40px; color:rgba(255,255,255,0.4);">Synchronizing design nexus...</div>';
+
+                await Api.migrateStorageToDb(user.id);
+                const wlRes = await Api.getWishlist(user.id);
+                if (wlRes.status !== 'success' || wlRes.data.length === 0) { renderEmpty(); return; }
+
+                const catRes = await Api.getCatalogueItems();
+                let catalogueData = (catRes.status === 'success') ? catRes.data : [];
+
+                boardItems = wlRes.data.map(entry => {
+                    if (entry.is_ai) return { ...entry.item_data, category: 'AI Intelligence Concept', isAi: true };
+                    const detail = catalogueData.find(i => String(i.id) === String(entry.item_id));
+                    return detail || { id: entry.item_id, name: "Luxury Asset", category: "General", price: 0 };
+                }).filter(Boolean);
+
+                if (boardItems.length === 0) { renderEmpty(); } else { renderHierarchical(boardItems); }
+            } catch (err) {
+                console.error("Board error:", err);
+                renderEmpty();
+            }
+        }
+
+        async function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            showToast("Rendering Visual Portfolio...", "info");
+
+            doc.setFillColor(30, 30, 35);
+            doc.rect(0, 0, 210, 40, 'F');
+            doc.setTextColor(212, 175, 55);
+            doc.setFontSize(22);
+            doc.text("VIBEUP DESIGN BOARD", 105, 25, { align: "center" });
+
+            let y = 60;
+            const groups = boardItems.reduce((acc, item) => {
+                const cat = item.category || 'General';
+                if (!acc[cat]) acc[cat] = [];
+                acc[cat].push(item);
+                return acc;
+            }, {});
+
+            Object.entries(groups).forEach(([cat, items]) => {
+                doc.setTextColor(212, 175, 55);
+                doc.setFontSize(14);
+                doc.text(cat.toUpperCase(), 15, y);
+                y += 10;
+                doc.setTextColor(80, 80, 80);
+                doc.line(15, y-2, 195, y-2);
+
+                items.forEach(item => {
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(11);
+                    doc.text(`• ${item.name}`, 20, y);
+                    doc.text(item.isAi ? "AI Concept" : `₹ ${Number(item.price).toLocaleString()}`, 190, y, { align: "right" });
+                    y += 8;
+                    if (y > 270) { doc.addPage(); y = 20; }
+                });
+                y += 10;
+            });
+
+            doc.save(`VibeUp_DesignBoard_${user.name.replace(/\s+/g, '_')}.pdf`);
+            showToast("Portfolio download started!", "success");
+        }
+
+        function renderHierarchical(items) {
+            const container = document.getElementById('board-container');
+            
+            // Group by category
+            const groups = items.reduce((acc, item) => {
+                const cat = item.category || 'Curated Misc';
+                if (!acc[cat]) acc[cat] = [];
+                acc[cat].push(item);
+                return acc;
+            }, {});
+
+            const categoryIcons = {
+                'AI Intelligence Concept': '✨',
+                'Seating': '🛋️',
+                'Tables': '🍽️',
+                'Lighting': '💡',
+                'Construction': '🧱',
+                'Flooring': '🪵',
+                'Wall Colors': '🎨',
+                'Interior': '🛋️',
+                'Exterior': '🌳'
+            };
+
+            container.innerHTML = Object.entries(groups).map(([name, catItems], idx) => `
+                <div class="category-section fade-up" style="animation-delay: ${idx * 0.15}s">
+                    <div class="category-header">
+                        <span class="category-icon">${categoryIcons[name] || '📦'}</span>
+                        <span class="category-name">${name.toUpperCase()}</span>
+                        <span class="category-count">${catItems.length} items</span>
+                    </div>
+                    <div class="board-grid">
+                        ${catItems.map(item => `
+                            <div class="board-card">
+                                <div class="card-remove" onclick="removeFromBoard('${item.id}')">✕</div>
+                                <img class="card-img" src="${getImg(item)}" alt="${item.name}">
+                                <div class="card-content">
+                                    <div class="card-title">${item.name}</div>
+                                    <div class="card-price">${item.isAi ? '∞ Concept' : '₹ ' + Number(item.price).toLocaleString()}</div>
+                                    <div style="display:flex; gap:10px;">
+                                        <button class="btn btn-glass" style="flex:1; padding: 10px; font-size: 13px;" onclick="window.location.href='../catalogue/index.html'">View Market</button>
+                                        <button class="btn btn-primary" style="flex:1; padding: 10px; font-size: 13px;" onclick="showToast('Loading into 3D Editor...', 'success')">Deploy</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getImg(item) {
+            if (item.image) return item.image;
+            if (item.images && item.images.length > 0 && !item.images[0].includes('placeholder')) return item.images[0];
+            const catImg = {
+                'Seating': 'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=600&q=80',
+                'Tables': 'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=600&q=80',
+                'Lighting': 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80'
+            };
+            return catImg[item.category] || 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=600&q=80';
+        }
+
+        async function removeFromBoard(id) {
+            const res = await Api.removeFromWishlist(user.id, id);
+            if(res.status === 'success') { showToast('Concept discarded', 'info'); loadBoard(); }
+        }
+
+        function renderEmpty() {
+            document.getElementById('board-container').innerHTML = `
+                <div class="empty-state">
+                    <div style="font-size: 64px; margin-bottom: 24px; opacity:0.3;">📋</div>
+                    <h3 style="color:#fff; margin-bottom:12px;">Your Board is Pristine</h3>
+                    <p style="margin-bottom: 32px;">Collect your favorite pieces from the atelier to begin your vision.</p>
+                    <button class="btn-atelier" onclick="window.location.href='../catalogue/index.html'">Explore Marketplace</button>
+                </div>
+            `;
+        }
+
+        loadBoard();
+    </script>
+</body>
+</html>

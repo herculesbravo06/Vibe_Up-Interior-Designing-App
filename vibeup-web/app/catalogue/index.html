@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Atelier | VibeUp Premium</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app.css">
+    <link rel="stylesheet" href="../../style.css">
+    <style>
+        :root {
+            --accent: #d4af37;
+            --accent-glow: rgba(212, 175, 55, 0.15);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background: #0a0a0c;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .atelier-header {
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .breadcrumb {
+            display: flex;
+            gap: 8px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .breadcrumb span { cursor: pointer; transition: color 0.2s; }
+        .breadcrumb span:hover { color: var(--accent); }
+        .breadcrumb .active { color: var(--accent); font-weight: 600; }
+
+        .search-container {
+            position: relative;
+            width: 350px;
+        }
+        .search-input {
+            width: 100%;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 12px 20px;
+            padding-right: 45px;
+            border-radius: 30px;
+            color: #fff;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        /* GRID STYLES */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .category-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .category-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--accent);
+            background: rgba(255,255,255,0.06);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        .category-icon {
+            font-size: 50px;
+            margin-bottom: 20px;
+            display: block;
+            transition: transform 0.3s;
+        }
+        .category-card:hover .category-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+        .category-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .category-count {
+            font-size: 13px;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* ITEM GRID */
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .item-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .item-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+        }
+        .item-preview {
+            height: 180px;
+            background: #151518;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        .item-content { padding: 20px; }
+        .item-name { font-weight: 600; font-size: 16px; margin-bottom: 6px; }
+        .item-meta { display: flex; justify-content: space-between; align-items: center; }
+        .item-price { color: var(--accent); font-weight: 700; font-size: 15px; }
+
+        .btn-action {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(255,255,255,0.05); color: #fff;
+            border: 1px solid var(--glass-border); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .btn-action:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+        .btn-action.active { background: #ff4757; color: #fff; border-color: #ff4757; }
+
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <div class="main-content">
+            <!-- HEADER -->
+            <div class="atelier-header">
+                <div>
+                    <div class="breadcrumb" id="breadcrumb">
+                        <span onclick="renderTier(0)">Design Atelier</span>
+                    </div>
+                    <h1 id="view-title" style="font-size: 32px; font-weight: 700; margin: 0;">Furniture & Finishes</h1>
+                </div>
+                <div class="search-container">
+                    <input type="text" class="search-input" id="search-input" placeholder="Search curated marketplace...">
+                    <span style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.3);">🔍</span>
+                </div>
+            </div>
+
+            <!-- CONTENT STAGE -->
+            <div id="content-stage" class="fade-in">
+                <!-- Data injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- CORE SCRIPTS -->
+    <script src="../app.js"></script>
+    <script src="../project/catalog_data.js"></script>
+    <script>
+        Auth.requireAuth();
+        const user = Auth.getUser();
+        renderSidebar('catalogue', user.role);
+
+        let currentTier = 0; // 0: Categories, 1: Subcategories, 2: Items
+        let selectedCatIdx = -1;
+        let selectedSubIdx = -1;
+        let wishlist = [];
+
+        async function init() {
+            const wlRes = await Api.getWishlist(user.id);
+            if(wlRes.status === 'success') wishlist = wlRes.data.map(i => i.item_id);
+            renderTier(0);
+        }
+
+        function renderTier(tier, idx1 = -1, idx2 = -1) {
+            currentTier = tier;
+            const stage = document.getElementById('content-stage');
+            const breadcrumb = document.getElementById('breadcrumb');
+            const title = document.getElementById('view-title');
+            
+            stage.classList.remove('fade-in');
+            void stage.offsetWidth; // Trigger reflow
+            stage.classList.add('fade-in');
+
+            if(tier === 0) {
+                // CATEGORIES
+                selectedCatIdx = -1;
+                selectedSubIdx = -1;
+                breadcrumb.innerHTML = '<span class="active">Design Atelier</span>';
+                title.innerText = "Premium Categories";
+                
+                stage.innerHTML = `<div class="category-grid">
+                    ${CATALOG_DATA.map((cat, i) => `
+                        <div class="category-card" onclick="renderTier(1, ${i})">
+                            <span class="category-icon">${cat.icon}</span>
+                            <div class="category-title">${cat.title}</div>
+                            <div class="category-count">${cat.sub.length} Designer Groups</div>
+                        </div>
+                    `).join('')}
+                </div>`;
+            } else if(tier === 1) {
+                // SUBCATEGORIES
+                selectedCatIdx = idx1;
+                const cat = CATALOG_DATA[idx1];
+                breadcrumb.innerHTML = `<span onclick="renderTier(0)">Atelier</span> / <span class="active">${cat.title}</span>`;
+                title.innerText = cat.title;
+
+                stage.innerHTML = `
+                    <div class="back-link" onclick="renderTier(0)">← Back to Categories</div>
+                    <div class="category-grid">
+                        ${cat.sub.map((sub, i) => `
+                            <div class="category-card" style="padding: 30px" onclick="renderTier(2, ${idx1}, ${i})">
+                                <span class="category-icon" style="font-size: 32px">${cat.icon}</span>
+                                <div class="category-title" style="font-size: 18px">${sub.name}</div>
+                                <div class="category-count">${sub.items.length} Curated Items</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else if(tier === 2) {
+                // ITEMS
+                selectedSubIdx = idx2;
+                const cat = CATALOG_DATA[idx1];
+                const sub = cat.sub[idx2];
+                breadcrumb.innerHTML = `<span onclick="renderTier(0)">Atelier</span> / <span onclick="renderTier(1, ${idx1})">${cat.title}</span> / <span class="active">${sub.name}</span>`;
+                title.innerText = sub.name;
+
+                stage.innerHTML = `
+                    <div class="back-link" onclick="renderTier(1, ${idx1})">← Back to Groups</div>
+                    <div class="item-grid">
+                        ${sub.items.map(item => {
+                            const isSaved = wishlist.includes(String(item.id));
+                            return `
+                                <div class="item-card">
+                                    <div class="item-preview">
+                                        ${item.wallColor ? `<div style="background:${item.wallColor}; width:60%; height:60%; border-radius:12px; border:1px solid rgba(255,255,255,0.1)"></div>` : 
+                                          item.floorMat ? `<div style="background:${getFloorPreviewColor(item.floorMat)}; width:60%; height:60%; border-radius:12px;"></div>` : 
+                                          cat.icon}
+                                    </div>
+                                    <div class="item-content">
+                                        <div class="item-name">${item.name}</div>
+                                        <div class="item-meta">
+                                            <div class="item-price">₹ ${item.price.toLocaleString()}</div>
+                                            <div style="display: flex; gap: 8px;">
+                                                <button class="btn-action ${isSaved ? 'active' : ''}" onclick="toggleWish('${item.id}', this, '${item.name.replace(/'/g, "\\'")}', '${cat.title}', ${item.price})">
+                                                    ${isSaved ? '❤️' : '♡'}
+                                                </button>
+                                                <button class="btn-action" style="background: var(--accent); color: #000" onclick="addToEst('${item.id}', '${item.name.replace(/'/g, "\\'")}', '${cat.title}', ${item.price})">
+                                                    💰
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+        }
+
+        function getFloorPreviewColor(mat) {
+            const colors = { wood: '#5a3a1a', dark_walnut: '#3a2510', light_ash: '#c8b090', marble: '#e8e4df', tile: '#7a7a80', slate: '#4a4a50', carpet: '#2a3a4a' };
+            return colors[mat] || '#555';
+        }
+
+        function getImg(item, catIcon) {
+            // Priority: item.image > Unsplash mapping > catIcon
+            const mapping = {
+                'Seating': 'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=600&q=80',
+                'Tables': 'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=600&q=80',
+                'Lighting': 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80',
+                'Flooring': 'https://images.unsplash.com/photo-1581850518616-bcb8186c3c30?auto=format&fit=crop&w=600&q=80',
+                'Bedroom': 'https://images.unsplash.com/photo-1505691938895-1758d7eaa511?auto=format&fit=crop&w=600&q=80'
+            };
+            return item.image || mapping[selectedCatIdx !== -1 ? CATALOG_DATA[selectedCatIdx].title : ''] || 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=600&q=80';
+        }
+
+        async function toggleWish(id, btn, name, cat, price) {
+            const isSaved = btn.classList.contains('active');
+            const img = getImg({id}, cat);
+            
+            if(isSaved) {
+                const res = await Api.removeFromWishlist(user.id, id);
+                if(res.status === 'success') {
+                    btn.classList.remove('active');
+                    btn.innerHTML = '♡';
+                    showToast("Removed from Design Board", "info");
+                }
+            } else {
+                const res = await Api.addToWishlist({
+                    userId: user.id,
+                    itemId: id,
+                    itemData: { id, name, category: cat, price, image: img }
+                });
+                if(res.status === 'success') {
+                    btn.classList.add('active');
+                    btn.innerHTML = '❤️';
+                    showToast("Secured to Design Board", "success");
+                }
+            }
+        }
+
+        async function addToEst(id, name, cat, price) {
+            const img = getImg({id}, cat);
+            const res = await Api.addToBudget({
+                userId: user.id,
+                itemId: id,
+                itemName: name,
+                category: cat,
+                price: price,
+                quantity: 1,
+                imageUrl: img
+            });
+            if(res.status === 'success') {
+                showToast(`Adding ${name} to budget...`, "success");
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Create your VibeUp account — AI-powered interior design.">
+    <title>Sign Up | VibeUp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app.css">
+    <style>
+        .auth-card { animation: cardIn 0.6s var(--ease-out-expo); }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .form-row { display: flex; gap: 12px; }
+        .form-row .form-group { flex: 1; }
+
+        .password-strength {
+            height: 3px;
+            border-radius: 3px;
+            background: var(--glass-border);
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .password-strength-fill {
+            height: 100%;
+            border-radius: 3px;
+            width: 0;
+            transition: width 0.3s, background 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-page">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <span style="color: var(--accent)">V</span>ibe<span style="color: var(--text-muted)">Up</span>
+                </div>
+                <h1 class="auth-title">Create Account</h1>
+                <p class="auth-subtitle">Start designing your dream spaces with AI</p>
+            </div>
+
+            <div class="auth-card">
+                <div class="auth-error" id="auth-error"></div>
+
+                <form id="signup-form" onsubmit="handleSignup(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="name">Full Name</label>
+                        <div class="form-input-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <input type="text" class="form-input" id="name" placeholder="John Doe" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Address</label>
+                        <div class="form-input-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            <input type="email" class="form-input" id="email" placeholder="your@email.com" required autocomplete="email">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="phone">Phone (Optional)</label>
+                            <input type="tel" class="form-input" id="phone" placeholder="+91...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="dob">Date of Birth (Optional)</label>
+                            <input type="date" class="form-input" id="dob" style="color-scheme:dark">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password</label>
+                        <input type="password" class="form-input" id="password" placeholder="Min 6 characters" required minlength="6" oninput="updatePasswordStrength()">
+                        <div class="password-strength">
+                            <div class="password-strength-fill" id="pw-strength"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="confirm-password">Confirm Password</label>
+                        <input type="password" class="form-input" id="confirm-password" placeholder="Re-enter password" required minlength="6">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg" style="width:100%; margin-top:8px" id="signup-btn">
+                        <span id="signup-btn-text">Create Account</span>
+                        <div class="spinner" id="signup-spinner" style="display:none; width:18px; height:18px; border-width:2px"></div>
+                    </button>
+                </form>
+            </div>
+
+            <div class="auth-footer">
+                Already have an account? <a href="login.html">Sign in</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script>
+        if (Auth.isLoggedIn()) navigateTo('app/dashboard/index.html');
+
+        function updatePasswordStrength() {
+            const pw = document.getElementById('password').value;
+            const fill = document.getElementById('pw-strength');
+            let strength = 0;
+            if (pw.length >= 6) strength++;
+            if (pw.length >= 10) strength++;
+            if (/[A-Z]/.test(pw)) strength++;
+            if (/[0-9]/.test(pw)) strength++;
+            if (/[^A-Za-z0-9]/.test(pw)) strength++;
+
+            const pct = (strength / 5) * 100;
+            fill.style.width = pct + '%';
+            if (pct <= 40) fill.style.background = 'var(--error)';
+            else if (pct <= 70) fill.style.background = 'var(--warning)';
+            else fill.style.background = 'var(--success)';
+        }
+
+        async function handleSignup(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const dob = document.getElementById('dob').value;
+            const password = document.getElementById('password').value;
+            const confirmPw = document.getElementById('confirm-password').value;
+            const errorEl = document.getElementById('auth-error');
+            const btn = document.getElementById('signup-btn');
+            const btnText = document.getElementById('signup-btn-text');
+            const spinner = document.getElementById('signup-spinner');
+
+            // Validation
+            if (password !== confirmPw) {
+                errorEl.textContent = 'Passwords do not match.';
+                errorEl.classList.add('visible');
+                return;
+            }
+
+            errorEl.classList.remove('visible');
+            btn.disabled = true;
+            btnText.textContent = 'Creating account...';
+            spinner.style.display = 'block';
+
+            try {
+                const result = await Api.register(name, email, password, phone || null, dob || null);
+
+                if (result.status === 'success') {
+                    const userData = result.data || {};
+                    if (!userData.id && result.user_id) userData.id = result.user_id;
+                    userData.name = name;
+                    userData.email = email;
+                    userData.role = 'user';
+                    Auth.saveUser(userData);
+                    navigateTo('app/dashboard/index.html');
+                } else {
+                    errorEl.textContent = result.message || 'Registration failed. Please try again.';
+                    errorEl.classList.add('visible');
+                }
+            } catch (err) {
+                errorEl.textContent = 'Connection error. Please check your network.';
+                errorEl.classList.add('visible');
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = 'Create Account';
+                spinner.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

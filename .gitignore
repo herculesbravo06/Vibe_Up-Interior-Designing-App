@@ -1,0 +1,92 @@
+# ==========================================
+# VibeUp v2.0 - Root .gitignore
+# ==========================================
+
+# --- Security: Environment & Credentials ---
+*.env
+*.env.*
+!.env.example
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+vibeup-backend/.env
+vibe_up_mobile/assets/.env
+
+# --- Security: Sensitive Logs & Debug Dumps ---
+*.log
+auth_debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Dependencies & Package Managers ---
+node_modules/
+*/node_modules/
+.pnp
+.pnp.js
+
+# --- Flutter / Dart Artifacts ---
+.dart_tool/
+*/.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+*/build/
+
+# Android build outputs
+android/**/gradle-wrapper.jar
+android/.gradle
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+
+# iOS build outputs
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/ServiceDefinitions.json
+
+# Windows / Linux / macOS desktop flutter ephemeral
+**/windows/flutter/ephemeral/
+**/linux/flutter/ephemeral/
+**/macos/Flutter/ephemeral/
+
+# Obfuscation & Symbols
+app.*.symbols
+app.*.map.json
+
+# --- Obsolete / Scratch Folders ---
+vibe_up/
+extra dump/
+tmp/
+temp/
+
+# --- IDEs & OS Files ---
+.idea/
+*/.idea/
+.vscode/
+*/.vscode/
+*.iml
+*.ipr
+*.iws
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.DS_Store
+Thumbs.db
+Desktop.ini

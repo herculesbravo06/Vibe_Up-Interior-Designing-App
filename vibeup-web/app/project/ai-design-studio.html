@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Design Studio | VibeUp Premium</title>
+    <link rel="stylesheet" href="../app.css">
+    <link rel="stylesheet" href="../../style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #d4af37;
+            --accent-glow: rgba(212, 175, 55, 0.15);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background: #0a0a0c;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .studio-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            height: 100vh;
+        }
+
+        /* LEFT PANEL: Setup */
+        .setup-panel {
+            background: rgba(0,0,0,0.4);
+            border-right: 1px solid var(--glass-border);
+            padding: 40px 30px;
+            overflow-y: auto;
+            backdrop-filter: blur(20px);
+        }
+
+        .studio-logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .setup-section {
+            margin-bottom: 35px;
+        }
+
+        .section-label {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        textarea {
+            width: 100%;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            color: #fff;
+            padding: 15px;
+            font-family: inherit;
+            font-size: 15px;
+            resize: none;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(255,255,255,0.06);
+        }
+
+        .style-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .style-item {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .style-item:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-2px);
+        }
+        .style-item.active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--glass-border);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-zone:hover {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+        }
+        .upload-preview {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .generate-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #d4af37, #f1c40f);
+            color: #000;
+            border: none;
+            padding: 18px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px var(--accent-glow);
+        }
+        .generate-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 40px var(--accent-glow);
+        }
+
+        /* RIGHT PANEL: Viewport */
+        .viewport-panel {
+            position: relative;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .result-stage {
+            width: 100%;
+            max-width: 1000px;
+            display: none;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .main-render {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: var(--glass);
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            position: relative;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+        }
+        .main-render img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .placeholder-text {
+            color: rgba(255,255,255,0.2);
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .controls-overlay {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .action-btn {
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        .action-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        /* ANIMATIONS */
+        .loading-state {
+            display: none;
+            text-align: center;
+        }
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--glass-border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+    <div class="studio-container">
+        <!-- SETUP -->
+        <div class="setup-panel">
+            <div class="studio-logo" style="display: flex; align-items: center; gap: 15px;">
+                <button onclick="window.location.href='../dashboard/index.html'" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px;">← Back</button>
+                <span>✨ DESIGN STUDIO</span>
+            </div>
+            
+            <div class="setup-section">
+                <span class="section-label">1. Describe Your Vision</span>
+                <div style="position: relative;">
+                    <textarea id="design-prompt" rows="4" placeholder="Describe materials, lighting, and mood..."></textarea>
+                    <button id="voice-input-btn" onclick="startVoiceInput()" style="position: absolute; bottom: 10px; right: 10px; background: var(--accent); border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px;">🎤</button>
+                </div>
+            </div>
+
+            <div class="setup-section">
+                <span class="section-label">2. Select a Signature Style</span>
+                <div class="style-grid">
+                    <div class="style-item active" onclick="selectStyle(this, 'Modern Luxury')">Modern</div>
+                    <div class="style-item" onclick="selectStyle(this, 'Extreme Minimalist')">Minimalist</div>
+                    <div class="style-item" onclick="selectStyle(this, 'Royal Luxury')">Luxury</div>
+                    <div class="style-item" onclick="selectStyle(this, 'Japandi Zen')">Japandi</div>
+                    <div class="style-item" onclick="selectStyle(this, 'Nordic Scandi')">Scandi</div>
+                    <div class="style-item" onclick="selectStyle(this, 'Grunge Industrial')">Industrial</div>
+                </div>
+            </div>
+
+            <button class="generate-btn" id="gen-btn" onclick="generateDesign()">GENERATE 3 LUXURY CONCEPTS</button>
+        </div>
+
+        <!-- VIEWPORT -->
+        <div class="viewport-panel">
+            <div id="placeholder" class="placeholder-text">
+                <div style="font-size: 80px; margin-bottom: 20px; opacity: 0.5;">🎨</div>
+                <h1 style="color: #fff; margin-bottom: 10px;">VIBEUP AI ENGINE v3.0</h1>
+                Your generated design concepts will appear here.<br>
+                We will generate 3 unique variants for you to compare.
+            </div>
+
+            <div id="loading" class="loading-state">
+                <div class="spinner"></div>
+                <div id="loading-text" style="font-size: 22px; font-weight: 700; letter-spacing: 0.2em; color: var(--accent);">AI BRAIN IMAGINING...</div>
+                <p style="color: rgba(255,255,255,0.4)">Crafting a trio of architectural masterpieces based on your vision.</p>
+            </div>
+
+            <div id="result-stage" class="result-stage" style="max-width: 1400px; width: 95%;">
+                <div id="render-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; width: 100%;">
+                    <!-- 3 Images inserted here -->
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 20px;">
+                    <div>
+                        <h2 id="result-title" style="margin: 0; font-size: 28px; color: var(--accent);">Architectural Concept Trio</h2>
+                        <p id="result-meta" style="color: rgba(255,255,255,0.4); margin: 5px 0 0;">Stability AI Engine | Parallel Multi-Concept Generation | Ultra HD</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script>
+        Auth.requireAuth();
+        const user = Auth.getUser();
+        let currentStyle = 'Modern Luxury';
+
+        function selectStyle(el, style) {
+            document.querySelectorAll('.style-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            currentStyle = style;
+        }
+
+        async function generateDesign() {
+            const prompt = document.getElementById('design-prompt').value.trim();
+            if(!prompt) {
+                showToast("Please describe your architectural vision.", "warning");
+                return;
+            }
+
+            document.getElementById('placeholder').style.display = 'none';
+            document.getElementById('result-stage').style.display = 'none';
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('gen-btn').disabled = true;
+            document.getElementById('gen-btn').innerText = "CALCULATING CONCEPTS...";
+
+            try {
+                // Single API call — backend already generates 3 unique AI images
+                const fullPrompt = `${prompt}, ${currentStyle} style, cinematic lighting, architectural photography`;
+                const result = await Api.nodePost('ai/generate-image', { 
+                    prompt: fullPrompt, 
+                    userId: user.id, 
+                    options: { style: currentStyle } 
+                });
+
+                if (result.status === 'success' && result.data && result.data.length > 0) {
+                    showResults(result.data, prompt);
+                } else {
+                    throw new Error(result.message || "AI Engine failed to return valid images.");
+                }
+            } catch (e) {
+                console.error(e);
+                showToast("AI Brain is currently busy or offline. Please try again.", "error");
+                document.getElementById('placeholder').style.display = 'block';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('gen-btn').disabled = false;
+                document.getElementById('gen-btn').innerText = "GENERATE 3 LUXURY CONCEPTS";
+            }
+        }
+
+        function showResults(urls, prompt) {
+            const grid = document.getElementById('render-grid');
+            grid.innerHTML = urls.map((url, idx) => `
+                <div class="fade-up" style="animation-delay: ${idx * 0.2}s">
+                    <div class="main-render" style="height: auto; aspect-ratio: 4/5; border-radius: 20px; transition: transform 0.3s; border: 1px solid var(--glass-border);">
+                        <img src="${url}" alt="Concept ${idx+1}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(transparent, rgba(0,0,0,0.9)); display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 14px; font-weight: 700; letter-spacing: 0.1em; color: var(--accent);">CONCEPT 0${idx+1}</span>
+                            <button class="action-btn" style="padding: 10px 20px; border-radius: 12px; font-size: 13px;" onclick="saveDesign('${url}', '${prompt.replace(/'/g, "\\'")}')">❤️ SAVE</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('result-stage').style.display = 'flex';
+        }
+
+        async function saveDesign(url, prompt) {
+            showToast("Syncing with Cloud Design Board...", "info");
+            
+            const conceptData = {
+                id: 'ai_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+                name: prompt || 'AI Architectural Vision',
+                category: 'AI Design Concept',
+                price: 0,
+                image: url, // Standardized for design-board
+                type: 'ai-concept',
+                isAI: true
+            };
+
+            const res = await Api.addToWishlist({
+                userId: user.id,
+                itemId: conceptData.id,
+                itemData: conceptData,
+                isAi: true
+            });
+
+            if (res.status === 'success') {
+                showToast("Concept secured to your Design Board!", "success");
+            } else {
+                showToast("Failed to save concept.", "error");
+            }
+        }
+
+        function startVoiceInput() {
+            const btn = document.getElementById('voice-input-btn');
+            const input = document.getElementById('design-prompt');
+            
+            if (window.webkitSpeechRecognition || window.SpeechRecognition) {
+                const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'en-US';
+                recognition.interimResults = true;
+                
+                recognition.onstart = () => {
+                    btn.innerHTML = '🔴';
+                    btn.style.background = '#ff4757';
+                    input.placeholder = "Listening to your vision...";
+                    input.style.borderColor = '#ff4757';
+                };
+                
+                recognition.onend = () => {
+                    btn.innerHTML = '🎤';
+                    btn.style.background = 'var(--accent)';
+                    input.placeholder = "Describe materials, lighting, and mood...";
+                    input.style.borderColor = 'var(--glass-border)';
+                };
+                
+                recognition.onresult = (event) => {
+                    let finalTranscript = '';
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) {
+                            finalTranscript += event.results[i][0].transcript;
+                        }
+                    }
+                    if (finalTranscript) {
+                        input.value = (input.value + ' ' + finalTranscript).trim();
+                    }
+                };
+                
+                recognition.start();
+            } else {
+                showToast("Voice input not supported in this browser.", "error");
+            }
+        }
+    </script>
+</body>
+</html>

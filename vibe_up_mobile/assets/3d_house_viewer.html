@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Whole House 3D Viewer</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #121212; font-family: sans-serif; }
+        canvas { display: block; }
+        #loading {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #121212; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; color: #D4AF37;
+            z-index: 10; transition: opacity 0.5s ease;
+        }
+        #toolbar {
+            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+            display: none; gap: 8px; z-index: 5;
+            background: rgba(0,0,0,0.75); padding: 8px 16px; border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        #toolbar.visible { display: flex; }
+        #toolbar button {
+            background: rgba(255,255,255,0.12); border: none; color: white;
+            padding: 10px 16px; border-radius: 12px; font-size: 13px;
+            cursor: pointer; display: flex; align-items: center; gap: 4px;
+        }
+        #toolbar button:hover { background: rgba(212,175,55,0.3); }
+        #toolbar button:active { background: rgba(212,175,55,0.5); }
+        #selectionInfo {
+            position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.7); color: #D4AF37; padding: 6px 16px;
+            border-radius: 12px; font-size: 13px; display: none; z-index: 5;
+        }
+        #selectionInfo.visible { display: block; }
+        #modeToggle {
+            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 0; z-index: 5; border-radius: 10px; overflow: hidden;
+            border: 1px solid rgba(212,175,55,0.3);
+        }
+        #modeToggle button {
+            background: rgba(0,0,0,0.6); border: none; color: #aaa;
+            padding: 8px 18px; font-size: 12px; cursor: pointer;
+        }
+        #modeToggle button.active { background: rgba(212,175,55,0.25); color: #D4AF37; font-weight: bold; }
+    </style>
+    <!-- Three.js ES Modules Import Map -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="loading">Generating Master 3D House...</div>
+    <div id="modeToggle">
+        <button id="btnMoveFurniture" class="active" onclick="setEditMode('furniture')">Move Items</button>
+        <button id="btnMoveRoom" onclick="setEditMode('room')">Move Rooms</button>
+    </div>
+    <div id="selectionInfo"></div>
+    <div id="toolbar">
+        <button onclick="rotateSelected(-Math.PI/4)">↶ Rotate</button>
+        <button onclick="rotateSelected(Math.PI/4)">↷ Rotate</button>
+        <button onclick="deleteSelected()" style="color:#ff6b6b">🗑 Delete</button>
+    </div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+let scene, camera, renderer, controls;
+const wallHeight = 2.8;
+const ROOM_SCALE = 1 / 15.0;
+
+// Interactive editing state
+let selectedObject = null;
+let editMode = 'furniture'; // 'furniture' or 'room'
+const furnitureObjects = [];
+const roomGroups = [];  // Each room is a THREE.Group containing walls, floor, furniture
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+let isDragging = false;
+let dragOffset = new THREE.Vector3();
+const highlightMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37, emissive: 0xD4AF37, emissiveIntensity: 0.3, roughness: 0.4, metalness: 0.3, transparent: true, opacity: 0.85 });
+
+// Mode toggle
+window.setEditMode = function(mode) {
+    editMode = mode;
+    deselectCurrent();
+    document.getElementById('btnMoveFurniture').className = mode === 'furniture' ? 'active' : '';
+    document.getElementById('btnMoveRoom').className = mode === 'room' ? 'active' : '';
+};
+
+function selectObject(obj) {
+    deselectCurrent();
+    if (!obj) return;
+    selectedObject = obj;
+    obj.traverse(child => {
+        if (child.isMesh) {
+            child.userData.origMaterial = child.material;
+            child.material = highlightMat;
+        }
+    });
+    const label = obj.userData.label || obj.userData.roomName || 'Object';
+    const info = document.getElementById('selectionInfo');
+    info.textContent = 'Selected: ' + label;
+    info.classList.add('visible');
+    document.getElementById('toolbar').classList.add('visible');
+}
+
+function deselectCurrent() {
+    if (!selectedObject) return;
+    selectedObject.traverse(child => {
+        if (child.isMesh && child.userData.origMaterial) {
+            child.material = child.userData.origMaterial;
+        }
+    });
+    selectedObject = null;
+    document.getElementById('selectionInfo').classList.remove('visible');
+    document.getElementById('toolbar').classList.remove('visible');
+}
+
+window.rotateSelected = function(angle) {
+    if (selectedObject) {
+        selectedObject.rotation.y += angle;
+    }
+};
+
+window.deleteSelected = function() {
+    if (!selectedObject) return;
+    scene.remove(selectedObject);
+    const fi = furnitureObjects.indexOf(selectedObject);
+    if (fi !== -1) furnitureObjects.splice(fi, 1);
+    const ri = roomGroups.indexOf(selectedObject);
+    if (ri !== -1) roomGroups.splice(ri, 1);
+    selectedObject = null;
+    document.getElementById('selectionInfo').classList.remove('visible');
+    document.getElementById('toolbar').classList.remove('visible');
+};
+
+function getPointerPos(e) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+}
+
+function getIntersection(e) {
+    getPointerPos(e);
+    raycaster.setFromCamera(mouse, camera);
+    
+    const targets = editMode === 'room'
+        ? roomGroups.flatMap(g => { const meshes = []; g.traverse(c => { if (c.isMesh) meshes.push(c); }); return meshes; })
+        : furnitureObjects.flatMap(g => { const meshes = []; g.traverse(c => { if (c.isMesh) meshes.push(c); }); return meshes; });
+    
+    return raycaster.intersectObjects(targets, false);
+}
+
+function findParentGroup(mesh) {
+    let obj = mesh;
+    while (obj.parent && obj.parent !== scene) {
+        obj = obj.parent;
+    }
+    return obj;
+}
+
+function onPointerDown(e) {
+    const hits = getIntersection(e);
+    if (hits.length > 0) {
+        const hitMesh = hits[0].object;
+        const group = findParentGroup(hitMesh);
+        
+        // Check it's the right type
+        if (editMode === 'furniture' && !furnitureObjects.includes(group)) return;
+        if (editMode === 'room' && !roomGroups.includes(group)) return;
+        
+        selectObject(group);
+        isDragging = true;
+        controls.enabled = false;
+        
+        // Calculate drag offset
+        const planeIntersect = new THREE.Vector3();
+        raycaster.ray.intersectPlane(floorPlane, planeIntersect);
+        dragOffset.copy(group.position).sub(planeIntersect);
+    } else {
+        deselectCurrent();
+    }
+}
+
+function onPointerMove(e) {
+    if (!isDragging || !selectedObject) return;
+    getPointerPos(e);
+    raycaster.setFromCamera(mouse, camera);
+    const planeIntersect = new THREE.Vector3();
+    if (raycaster.ray.intersectPlane(floorPlane, planeIntersect)) {
+        selectedObject.position.x = planeIntersect.x + dragOffset.x;
+        selectedObject.position.z = planeIntersect.z + dragOffset.z;
+    }
+}
+
+function onPointerUp() {
+    isDragging = false;
+    controls.enabled = true;
+}
+
+init();
+animate();
+
+function init() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1a1a24);
+
+    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(20, 30, 30); // Higher vantage point for full house
+
+    renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    document.body.appendChild(renderer.domElement);
+
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.maxPolarAngle = Math.PI / 2 + 0.1; // Don't go below ground
+
+    // Lighting
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
+    hemiLight.position.set(0, 20, 0);
+    scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(20, 40, 20);
+    dirLight.castShadow = true;
+    dirLight.shadow.camera.top = 20;
+    dirLight.shadow.camera.bottom = -20;
+    dirLight.shadow.camera.left = -20;
+    dirLight.shadow.camera.right = 20;
+    dirLight.shadow.camera.near = 0.1;
+    dirLight.shadow.camera.far = 100;
+    scene.add(dirLight);
+
+    // Floor base
+    const planeGeo = new THREE.PlaneGeometry(100, 100);
+    const planeMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
+    const plane = new THREE.Mesh(planeGeo, planeMat);
+    plane.rotation.x = -Math.PI / 2;
+    plane.receiveShadow = true;
+    scene.add(plane);
+
+    window.addEventListener('resize', onWindowResize, false);
+
+    // Touch and mouse interaction
+    renderer.domElement.addEventListener('pointerdown', onPointerDown, false);
+    renderer.domElement.addEventListener('pointermove', onPointerMove, false);
+    renderer.domElement.addEventListener('pointerup', onPointerUp, false);
+    renderer.domElement.addEventListener('touchstart', e => onPointerDown(e.touches[0]), { passive: false });
+    renderer.domElement.addEventListener('touchmove', e => { e.preventDefault(); onPointerMove(e.touches[0]); }, { passive: false });
+    renderer.domElement.addEventListener('touchend', onPointerUp, false);
+    
+    // Fade out loading
+    setTimeout(() => {
+        const loadScreen = document.getElementById('loading');
+        if (loadScreen) {
+            loadScreen.style.opacity = '0';
+            setTimeout(() => loadScreen.style.display = 'none', 500);
+        }
+    }, 1000);
+
+    // Send ready event to Flutter wrapper
+    if (window.Print != undefined) {
+        Print.postMessage(JSON.stringify({ event: 'ready' }));
+    }
+}
+
+const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.9, metalness: 0.05 });
+const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.8, metalness: 0.1 });
+
+function makeMat(color, roughness = 0.6, metalness = 0.05) {
+  return new THREE.MeshStandardMaterial({ color, roughness, metalness });
+}
+function addM(g, geo, mat, x, y, z, shadow=false, rx=0, ry=0, rz=0) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, y, z);
+  if (rx || ry || rz) m.rotation.set(rx, ry, rz);
+  m.castShadow = shadow;
+  g.add(m);
+  return m;
+}
+
+const furnitureDefs = {
+  sofa: { build: function() {
+    const g = new THREE.Group();
+    addM(g, new THREE.BoxGeometry(2.0, 0.4, 0.9), makeMat(0x4a6fa5), 0, 0.35, 0, true);
+    addM(g, new THREE.BoxGeometry(2.0, 0.5, 0.15), makeMat(0x3d5f8a), 0, 0.7, -0.38, true);
+    addM(g, new THREE.BoxGeometry(0.15, 0.35, 0.9), makeMat(0x3d5f8a), -0.93, 0.52, 0, true);
+    addM(g, new THREE.BoxGeometry(0.15, 0.35, 0.9), makeMat(0x3d5f8a), 0.93, 0.52, 0, true);
+    const legMat = makeMat(0x2c2c2e, 0.4, 0.3);
+    [[-0.85, -0.35], [0.85, -0.35], [-0.85, 0.35], [0.85, 0.35]].forEach(([x, z]) => {
+      addM(g, new THREE.CylinderGeometry(0.03, 0.03, 0.15), legMat, x, 0.075, z);
+    });
+    [[-0.45, 0], [0.45, 0]].forEach(([x, z]) => {
+      addM(g, new THREE.BoxGeometry(0.8, 0.12, 0.7), makeMat(0x5a7fb5, 0.8), x, 0.61, 0.05, true);
+    });
+    return g;
+  }},
+  chair: { build: function() {
+    const g = new THREE.Group();
+    addM(g, new THREE.BoxGeometry(0.55, 0.08, 0.55), makeMat(0xc49a6c), 0, 0.45, 0, true);
+    addM(g, new THREE.BoxGeometry(0.55, 0.6, 0.06), makeMat(0xb08850), 0, 0.75, -0.25, true);
+    const lMat = makeMat(0x2c2c2e, 0.4, 0.3);
+    [[-0.22, -0.22], [0.22, -0.22], [-0.22, 0.22], [0.22, 0.22]].forEach(([x, z]) => {
+      addM(g, new THREE.CylinderGeometry(0.02, 0.02, 0.45), lMat, x, 0.225, z);
+    });
+    return g;
+  }},
+  table: { build: function() {
+    const g = new THREE.Group();
+    addM(g, new THREE.BoxGeometry(1.0, 0.06, 0.6), makeMat(0x8B6F47), 0, 0.4, 0, true);
+    const lMat = makeMat(0x2c2c2e, 0.4, 0.3);
+    [[-0.42, -0.22], [0.42, -0.22], [-0.42, 0.22], [0.42, 0.22]].forEach(([x, z]) => {
+      addM(g, new THREE.CylinderGeometry(0.025, 0.025, 0.4), lMat, x, 0.2, z);
+    });
+    return g;
+  }},
+  dining_table: { build: function() {
+    const g = new THREE.Group();
+    addM(g, new THREE.BoxGeometry(1.6, 0.07, 0.9), makeMat(0x6B4226), 0, 0.75, 0, true);
+    const lMat = makeMat(0x2c2c2e, 0.3, 0.4);
+    [[-0.7, -0.35], [0.7, -0.35], [-0.7, 0.35], [0.7, 0.35]].forEach(([x, z]) => {
+      addM(g, new THREE.BoxGeometry(0.06, 0.75, 0.06), lMat, x, 0.375, z);
+    });
+    return g;
+  }},
+  lamp: { build: function() {
+    const g = new THREE.Group();
+    addM(g, new THREE.CylinderGeometry(0.15, 0.18, 0.04), makeMat(0x2c2c2e, 0.3, 0.5), 0, 0.02, 0);
+    addM(g, new THREE.CylinderGeometry(0.02, 0.02, 1.4), makeMat(0xc0c0c0, 0.3, 0.6), 0, 0.72, 0, true);
+    addM(g, new THREE.CylinderGeometry(0.06, 0.2, 0.3), makeMat(0xfff5e0, 0.9, 0.0), 0, 1.55, 0, true);
+    const lampLight = new THREE.PointLight(0xfff0d0, 0.6, 4);
+    lampLight.position.set(0, 1.5, 0);
+    g.add(lampLight);
+    return g;
+  }},
+  bookshelf: { build: function() {
+    const g = new THREE.Group();
+    addM(g, new THREE.BoxGeometry(1.0, 1.8, 0.3), makeMat(0x654321), 0, 0.9, 0, true);
+    for (let i = 0; i < 4; i++) {
+        addM(g, new THREE.BoxGeometry(0.92, 0.03, 0.28), makeMat(0x7a5a3a), 0, 0.25 + i * 0.45, 0);
+    }
+    const bookColors = [0xc0392b, 0x2980b9, 0x27ae60, 0xf39c12, 0x8e44ad];
+    for (let shelf = 0; shelf < 3; shelf++) {
+        let x = -0.38;
+        for (let b = 0; b < 5; b++) {
+        const h = 0.2 + Math.random() * 0.15;
+        const w = 0.05 + Math.random() * 0.06;
+        addM(g, new THREE.BoxGeometry(w, h, 0.18), makeMat(bookColors[(shelf + b) % bookColors.length]), x, 0.27 + shelf * 0.45 + h/2, 0);
+        x += w + 0.02;
+        }
+    }
+    return g;
+  }},
+  rug: { build: function() {
+    const g = new THREE.Group();
+    addM(g, new THREE.PlaneGeometry(2.2, 1.6), makeMat(0x8B4513, 0.95, 0.0), 0, 0.01, 0, false, -Math.PI/2, 0, 0);
+    addM(g, new THREE.PlaneGeometry(2.0, 1.4), makeMat(0xCD853F, 0.95, 0.0), 0, 0.015, 0, false, -Math.PI/2, 0, 0);
+    return g;
+  }},
+  plant: { build: function() {
+    const g = new THREE.Group();
+    addM(g, new THREE.CylinderGeometry(0.12, 0.1, 0.22), makeMat(0xa0522d), 0, 0.11, 0, true);
+    addM(g, new THREE.CylinderGeometry(0.11, 0.11, 0.03), makeMat(0x3e2723), 0, 0.23, 0);
+    const leafMat = makeMat(0x2e7d32);
+    addM(g, new THREE.SphereGeometry(0.14, 8, 6), leafMat, 0, 0.4, 0, true);
+    addM(g, new THREE.SphereGeometry(0.1, 8, 6), leafMat, 0.08, 0.5, 0.05, true);
+    addM(g, new THREE.SphereGeometry(0.1, 8, 6), leafMat, -0.06, 0.48, -0.06, true);
+    return g;
+  }},
+  bed: { build: function() {
+    const g = new THREE.Group();
+    addM(g, new THREE.BoxGeometry(1.8, 0.25, 2.2), makeMat(0x5C4033), 0, 0.25, 0, true);
+    addM(g, new THREE.BoxGeometry(1.7, 0.2, 2.1), makeMat(0xf5f5f0, 0.9), 0, 0.475, 0, true);
+    addM(g, new THREE.BoxGeometry(1.8, 0.8, 0.08), makeMat(0x4a3728), 0, 0.75, -1.05, true);
+    [[-0.45, -0.7], [0.45, -0.7]].forEach(([x, z]) => {
+      addM(g, new THREE.BoxGeometry(0.5, 0.12, 0.35), makeMat(0xe8e4de, 0.9), x, 0.64, z, true);
+    });
+    return g;
+  }},
+  tv_stand: { build: function() {
+    const g = new THREE.Group();
+    addM(g, new THREE.BoxGeometry(1.6, 0.5, 0.4), makeMat(0x2c2c2e, 0.4, 0.2), 0, 0.25, 0, true);
+    addM(g, new THREE.BoxGeometry(1.3, 0.75, 0.04), makeMat(0x1a1a1a, 0.2, 0.5), 0, 0.88, 0, true);
+    addM(g, new THREE.BoxGeometry(1.2, 0.65, 0.01), makeMat(0x111133, 0.1, 0.0), 0, 0.88, 0.025);
+    return g;
+  }},
+  cabinet: { build: function() {
+    const g = new THREE.Group();
+    addM(g, new THREE.BoxGeometry(0.8, 1.2, 0.45), makeMat(0xdeb887), 0, 0.6, 0, true);
+    addM(g, new THREE.BoxGeometry(0.37, 1.1, 0.02), makeMat(0xc8a96e), -0.19, 0.6, 0.24, true);
+    addM(g, new THREE.BoxGeometry(0.37, 1.1, 0.02), makeMat(0xc8a96e), 0.19, 0.6, 0.24, true);
+    const handleMat = makeMat(0xD4AF37, 0.3, 0.6);
+    addM(g, new THREE.SphereGeometry(0.02), handleMat, -0.06, 0.6, 0.26);
+    addM(g, new THREE.SphereGeometry(0.02), handleMat, 0.06, 0.6, 0.26);
+    return g;
+  }},
+  desk: { build: function() {
+    const g = new THREE.Group();
+    addM(g, new THREE.BoxGeometry(1.4, 0.06, 0.65), makeMat(0x8B6F47), 0, 0.75, 0, true);
+    const lMat = makeMat(0x2c2c2e, 0.3, 0.4);
+    [[-0.62, -0.25], [0.62, -0.25], [-0.62, 0.25], [0.62, 0.25]].forEach(([x, z]) => {
+      addM(g, new THREE.BoxGeometry(0.05, 0.75, 0.05), lMat, x, 0.375, z);
+    });
+    addM(g, new THREE.BoxGeometry(0.5, 0.15, 0.55), makeMat(0x7a5a3a), 0.4, 0.635, 0, true);
+    return g;
+  }}
+};
+
+// Called by Flutter
+window.buildHouse = function(jsonData) {
+    try {
+        const rooms = JSON.parse(jsonData);
+        
+        let minX = 99999, minZ = 99999;
+        let maxX = -99999, maxZ = -99999;
+
+        // Draw each room inside a group so it can be moved as a unit
+        rooms.forEach(room => {
+            const wFt = room.width_ft || 12;
+            const lFt = room.length_ft || 12;
+            const xPx = room.pos_x || 0;
+            const yPx = room.pos_y || 0;
+
+            const wUnits = wFt;
+            const lUnits = lFt;
+            const cx = (xPx * ROOM_SCALE) + (wUnits / 2);
+            const cz = (yPx * ROOM_SCALE) + (lUnits / 2);
+
+            if (cx - wUnits/2 < minX) minX = cx - wUnits/2;
+            if (cz - lUnits/2 < minZ) minZ = cz - lUnits/2;
+            if (cx + wUnits/2 > maxX) maxX = cx + wUnits/2;
+            if (cz + lUnits/2 > maxZ) maxZ = cz + lUnits/2;
+
+            // Create a room group so the entire room can be dragged
+            const roomGroup = new THREE.Group();
+            roomGroup.position.set(cx, 0, cz);
+            roomGroup.userData = { isRoom: true, roomName: room.name || 'Room', label: room.name || 'Room' };
+
+            // Floor (positions relative to group center = 0,0)
+            const floorGeo = new THREE.BoxGeometry(wUnits, 0.1, lUnits);
+            const floorMesh = new THREE.Mesh(floorGeo, floorMaterial);
+            floorMesh.position.set(0, 0.05, 0);
+            floorMesh.receiveShadow = true;
+            roomGroup.add(floorMesh);
+
+            // Walls
+            const thickness = 0.2;
+            const halfH = wallHeight / 2;
+            
+            const wallFBGeo = new THREE.BoxGeometry(wUnits + thickness, wallHeight, thickness);
+            const wallNorth = new THREE.Mesh(wallFBGeo, wallMaterial.clone());
+            wallNorth.position.set(0, halfH, -lUnits/2);
+            wallNorth.userData.inwardNormal = new THREE.Vector3(0, 0, 1);
+            roomGroup.add(wallNorth);
+
+            const wallSouth = new THREE.Mesh(wallFBGeo, wallMaterial.clone());
+            wallSouth.position.set(0, halfH, lUnits/2);
+            wallSouth.userData.inwardNormal = new THREE.Vector3(0, 0, -1);
+            roomGroup.add(wallSouth);
+
+            const wallLRGeo = new THREE.BoxGeometry(thickness, wallHeight, lUnits - thickness);
+            const wallEast = new THREE.Mesh(wallLRGeo, wallMaterial.clone());
+            wallEast.position.set(wUnits/2, halfH, 0);
+            wallEast.userData.inwardNormal = new THREE.Vector3(-1, 0, 0);
+            roomGroup.add(wallEast);
+
+            const wallWest = new THREE.Mesh(wallLRGeo, wallMaterial.clone());
+            wallWest.position.set(-wUnits/2, halfH, 0);
+            wallWest.userData.inwardNormal = new THREE.Vector3(1, 0, 0);
+            roomGroup.add(wallWest);
+
+            scene.add(roomGroup);
+            roomGroups.push(roomGroup);
+
+            // Furniture - these are added to the SCENE (not the room group)
+            // so they can be independently dragged
+            if (room.sceneData) {
+                try {
+                    const roomScene = JSON.parse(room.sceneData);
+                    if (roomScene && roomScene.items) {
+                        roomScene.items.forEach(item => {
+                            const def = furnitureDefs[item.type];
+                            let obj;
+                            if (def) {
+                                obj = def.build();
+                            } else {
+                                obj = new THREE.Group();
+                                addM(obj, new THREE.BoxGeometry(0.6, 0.6, 0.6), makeMat(0x888888), 0, 0.3, 0, true);
+                            }
+                            obj.position.set(cx + item.x, 0, cz + item.z);
+                            obj.rotation.y = item.rotation || 0;
+                            obj.userData = { isFurniture: true, type: item.type, label: item.name || item.type, roomName: room.name };
+                            scene.add(obj);
+                            furnitureObjects.push(obj);
+                        });
+                    }
+                } catch(e) {
+                    console.error('Failed to parse sceneData for room', room.name, e);
+                }
+            }
+        });
+
+        // Center camera and controls target on the whole house centroid
+        const centerX = (minX + maxX) / 2;
+        const centerZ = (minZ + maxZ) / 2;
+        const sizeX = maxX - minX;
+        const sizeZ = maxZ - minZ;
+
+        controls.target.set(centerX, 0, centerZ);
+        camera.position.set(centerX, Math.max(sizeX, sizeZ) * 1.5, centerZ + Math.max(sizeX, sizeZ));
+        controls.update();
+
+    } catch (e) {
+        console.error("Error parsing house layout", e);
+    }
+};
+
+window.exportGLB = function() {
+    import('three/addons/exporters/GLTFExporter.js').then(module => {
+        const GLTFExporter = module.GLTFExporter;
+        const exporter = new GLTFExporter();
+        
+        // Collect all relevant design elements (Furniture + Rooms)
+        const exportGroup = new THREE.Group();
+        scene.traverse(child => {
+            if (child.isMesh && !child.name.includes('grid') && !child.name.includes('Helper')) {
+                // Check if it's a structural mesh (floor/wall) inside a roomGroup
+                // or if it's a mesh inside a furniture group
+                let isRelevant = false;
+                let p = child.parent;
+                while (p && p !== scene) {
+                    if (p.userData && (p.userData.isRoom || p.userData.isFurniture || p.userData.type)) {
+                        isRelevant = true;
+                        break;
+                    }
+                    p = p.parent;
+                }
+
+                if (isRelevant || ['floor', 'wall'].includes(child.name)) {
+                    exportGroup.add(child.clone());
+                }
+            }
+        });
+
+        exporter.parse(
+            exportGroup,
+            (result) => {
+                const blob = new Blob([result], { type: 'model/gltf-binary' });
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const base64 = reader.result.split(',')[1];
+                    if (window.Print != undefined) {
+                        Print.postMessage(JSON.stringify({ event: 'exportGLB', data: base64 }));
+                    }
+                };
+                reader.readAsDataURL(blob);
+            },
+            (error) => {
+                console.error('GLB export error:', error);
+            },
+            { binary: true }
+        );
+    });
+};
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    
+    // Dynamic Wall Transparency (Back-face selection)
+    // If a wall is between the camera and the center of its room, make it transparent
+    const camDir = new THREE.Vector3();
+    camera.getWorldDirection(camDir);
+    
+    roomGroups.forEach(group => {
+        group.children.forEach(child => {
+            if (child.userData.inwardNormal) {
+                const wallNormal = child.userData.inwardNormal.clone().applyQuaternion(group.quaternion);
+                // Dot product: if wall normal points in same direction as camera, it's a "back" wall (blocking view)
+                const dot = wallNormal.dot(camDir);
+                
+                if (dot > 0.2) { // Wall is facing away from camera/towards interior
+                    child.material.opacity = 0.15;
+                    child.material.transparent = true;
+                } else {
+                    child.material.opacity = 1.0;
+                    child.material.transparent = false;
+                }
+            }
+        });
+    });
+
+    renderer.render(scene, camera);
+}
+</script>
+</body>
+</html>

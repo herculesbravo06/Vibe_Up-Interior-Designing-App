@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Estimation | VibeUp Premium</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app.css">
+    <style>
+        :root {
+            --accent: #d4af37;
+            --accent-glow: rgba(212, 175, 55, 0.15);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        body { background: #0a0a0c; color: #fff; font-family: 'Outfit', sans-serif; }
+
+        .budget-container { max-width: 1100px; margin: 0 auto; padding-bottom: 60px; }
+        
+        .budget-header { 
+            display: flex; justify-content: space-between; align-items: flex-end; 
+            margin-bottom: 40px; padding: 24px 0; border-bottom: 1px solid var(--glass-border);
+        }
+
+        /* CATEGORY GROUPING */
+        .category-group { margin-bottom: 40px; }
+        .category-row-header {
+            background: rgba(255,255,255,0.02);
+            padding: 12px 20px;
+            border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px;
+            border: 1px solid var(--glass-border);
+        }
+        .cat-info { display: flex; align-items: center; gap: 12px; }
+        .cat-icon { font-size: 18px; }
+        .cat-name { font-weight: 700; color: var(--accent); letter-spacing: 0.05em; text-transform: uppercase; font-size: 13px; }
+        .cat-subtotal { font-weight: 700; color: #fff; font-size: 14px; }
+
+        .budget-table {
+            width: 100%; border-collapse: separate; border-spacing: 0 8px;
+        }
+        .budget-table th {
+            text-align: left; padding: 12px 20px; font-size: 11px; text-transform: uppercase;
+            color: rgba(255,255,255,0.4); font-weight: 700; letter-spacing: 0.1em;
+        }
+        
+        .budget-row { background: var(--glass); transition: all 0.2s; }
+        .budget-row:hover { background: rgba(255,255,255,0.06); }
+        .budget-row td { padding: 16px 20px; border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); }
+        .budget-row td:first-child { border-left: 1px solid var(--glass-border); border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+        .budget-row td:last-child { border-right: 1px solid var(--glass-border); border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+
+        .item-preview { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: #151518; }
+        
+        .qty-controls { display: flex; align-items: center; gap: 12px; }
+        .qty-btn { 
+            width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.05); color: #fff; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
+        }
+        .qty-btn:hover { background: var(--accent); color: #000; }
+
+        .summary-card {
+            background: var(--glass); border: 1px solid var(--accent); border-radius: 20px;
+            padding: 40px; margin-top: 40px; display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(20px);
+        }
+        .total-label { font-size: 13px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 8px; }
+        .total-amount { font-size: 36px; font-weight: 700; color: var(--accent); }
+
+        .fade-up { opacity: 0; transform: translateY(16px); animation: fadeUp 0.5s var(--ease-out-expo) forwards; }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+        @media print {
+            .sidebar, .btn, .qty-controls, .item-remove, .atelier-header { display: none !important; }
+            body { background: white !important; color: black !important; }
+            .budget-row, .category-row-header { background: #f9f9f9 !important; border: 1px solid #ddd !important; }
+            .total-amount { color: black !important; }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-layout">
+        <div class="main-content">
+            <div class="budget-container">
+                <div class="budget-header fade-up">
+                    <div>
+                        <div style="font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 8px;">Financial Design Nexus</div>
+                        <h1 style="font-size: 32px; font-weight: 700; margin: 0;">Budget Estimation</h1>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-glass" onclick="exportToPDF()">📄 Download PDF Report</button>
+                        <button class="btn btn-primary" onclick="window.location.href='../catalogue/index.html'">+ Add Assets</button>
+                    </div>
+                </div>
+
+                <div id="budget-content">
+                    <!-- TABLE HEADERS (Global) -->
+                    <table class="budget-table fade-up" style="margin-bottom: 0;">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">Asset</th>
+                                <th>Description</th>
+                                <th style="width: 150px;">Unit Price</th>
+                                <th style="width: 120px;">Quantity</th>
+                                <th style="width: 150px;">Subtotal</th>
+                                <th style="width: 50px;"></th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <div id="groups-container">
+                        <!-- Grouped data injected here -->
+                    </div>
+                </div>
+
+                <div id="empty-state" style="display: none; text-align: center; padding: 100px 0;">
+                    <div style="font-size: 64px; margin-bottom: 24px; opacity: 0.3;">💰</div>
+                    <h2 style="color:#fff;">Budget is Currently Empty</h2>
+                    <p style="margin-bottom: 32px; color: rgba(255,255,255,0.4)">Add curated pieces from the atelier to generate your financial blueprint.</p>
+                    <button class="btn btn-primary" onclick="window.location.href='../catalogue/index.html'">Explore Atelier</button>
+                </div>
+
+                <div class="summary-card fade-up" id="summary-card" style="animation-delay: 0.3s">
+                    <div>
+                        <div class="total-label">Projected Total Investment</div>
+                        <div class="total-amount" id="grand-total">₹ 0</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="font-size: 11px; color: rgba(255,255,255,0.3); margin-bottom: 12px;">Exclusive of taxation and shipping where applicable.</p>
+                        <button class="btn btn-primary" style="padding: 14px 28px;" onclick="showToast('Finalizing quote with logistics team...', 'success')">Secure Official Quote</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="../app.js"></script>
+    <script>
+        Auth.requireAuth();
+        const user = Auth.getUser();
+        renderSidebar('budget', user.role);
+
+        let budgetItems = [];
+
+        async function loadBudget() {
+            try {
+                await Api.migrateStorageToDb(user.id);
+                const res = await Api.getBudget(user.id);
+                if (res.status === 'success') {
+                    budgetItems = res.data;
+                    renderBudget();
+                } else {
+                    renderEmpty();
+                }
+            } catch (err) {
+                console.error("Budget error:", err);
+                renderEmpty();
+            }
+        }
+
+        function renderEmpty() {
+            document.getElementById('budget-content').style.display = 'none';
+            document.getElementById('summary-card').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'block';
+        }
+
+        function renderBudget() {
+            const container = document.getElementById('groups-container');
+            const summary = document.getElementById('summary-card');
+            const empty = document.getElementById('empty-state');
+            const content = document.getElementById('budget-content');
+
+            if (budgetItems.length === 0) { renderEmpty(); return; }
+
+            empty.style.display = 'none';
+            summary.style.display = 'flex';
+            content.style.display = 'block';
+
+            // Grouping Logic
+            const groups = budgetItems.reduce((acc, item) => {
+                const cat = item.category || 'General';
+                if (!acc[cat]) acc[cat] = { items: [], total: 0 };
+                acc[cat].items.push(item);
+                acc[cat].total += item.price * item.quantity;
+                return acc;
+            }, {});
+
+            let grandTotal = 0;
+
+            container.innerHTML = Object.entries(groups).map(([name, data]) => {
+                grandTotal += data.total;
+                return `
+                    <div class="category-group fade-up">
+                        <div class="category-row-header">
+                            <div class="cat-info">
+                                <span class="cat-name">${name}</span>
+                            </div>
+                            <div class="cat-subtotal">₹ ${data.total.toLocaleString()}</div>
+                        </div>
+                        <table class="budget-table">
+                            <tbody>
+                                ${data.items.map(item => `
+                                    <tr class="budget-row">
+                                        <td style="width: 80px;"><img src="${item.image_url}" class="item-preview"></td>
+                                        <td>
+                                            <div style="font-weight: 600; font-size: 15px;">${item.item_name}</div>
+                                            <div style="font-size: 11px; color: rgba(255,255,255,0.4); text-transform:uppercase;">${name} Asset</div>
+                                        </td>
+                                        <td style="width: 150px;">₹ ${Number(item.price).toLocaleString()}</td>
+                                        <td style="width: 120px;">
+                                            <div class="qty-controls">
+                                                <button class="qty-btn" onclick="updateQty('${item.item_id}', -1)">−</button>
+                                                <span style="min-width: 25px; text-align: center;">${item.quantity}</span>
+                                                <button class="qty-btn" onclick="updateQty('${item.item_id}', 1)">+</button>
+                                            </div>
+                                        </td>
+                                        <td style="width: 150px; font-weight: 700; color: var(--accent);">₹ ${(item.price * item.quantity).toLocaleString()}</td>
+                                        <td style="width: 50px; text-align: right;">
+                                            <button style="background:none; border:none; color:#ff4d4d; cursor:pointer;" onclick="removeItem('${item.item_id}')">✕</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('grand-total').innerText = `₹ ${grandTotal.toLocaleString()}`;
+        }
+
+        async function updateQty(id, delta) {
+            const item = budgetItems.find(i => i.item_id === id);
+            if (item) {
+                const newQty = Math.max(1, (item.quantity || 1) + delta);
+                await Api.addToBudget({
+                    userId: user.id, itemId: id, itemName: item.item_name,
+                    category: item.category, price: item.price,
+                    quantity: newQty, imageUrl: item.image_url
+                });
+                loadBudget();
+            }
+        }
+
+        async function removeItem(id) {
+            const res = await Api.removeFromBudget(user.id, id);
+            if (res.status === 'success') { showToast('Budget updated', 'info'); loadBudget(); }
+        }
+
+        async function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            showToast("Generating Luxury Design Report...", "info");
+
+            // Header
+            doc.setFillColor(20, 20, 20);
+            doc.rect(0, 0, 210, 40, 'F');
+            doc.setTextColor(212, 175, 55);
+            doc.setFontSize(24);
+            doc.text("VIBEUP PREMIUM QUOTE", 105, 25, { align: "center" });
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(10);
+            doc.text(`CLIENT: ${user.name.toUpperCase()} | DATE: ${new Date().toLocaleDateString()}`, 105, 34, { align: "center" });
+
+            let y = 60;
+            let grandTotal = 0;
+
+            const groups = budgetItems.reduce((acc, item) => {
+                const cat = item.category || 'General';
+                if (!acc[cat]) acc[cat] = [];
+                acc[cat].push(item);
+                return acc;
+            }, {});
+
+            Object.entries(groups).forEach(([cat, items]) => {
+                if (y > 250) { doc.addPage(); y = 20; }
+                
+                // Category Header
+                doc.setDrawColor(212, 175, 55);
+                doc.setLineWidth(0.5);
+                doc.line(15, y, 195, y);
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(14);
+                doc.setFont(undefined, 'bold');
+                doc.text(cat.toUpperCase(), 15, y + 8);
+                y += 15;
+
+                items.forEach(item => {
+                    const subtotal = item.price * item.quantity;
+                    grandTotal += subtotal;
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(String(item.item_name), 20, y);
+                    doc.text(`Qty: ${item.quantity}`, 120, y);
+                    doc.text(`₹ ${subtotal.toLocaleString()}`, 195, y, { align: "right" });
+                    y += 10;
+
+                    if (y > 270) { doc.addPage(); y = 20; }
+                });
+                y += 10;
+            });
+
+            // Footer / Total
+            y += 10;
+            doc.setFillColor(245, 245, 245);
+            doc.rect(15, y, 180, 20, 'F');
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(212, 175, 55);
+            doc.text("TOTAL ESTIMATED INVESTMENT", 20, y + 13);
+            doc.text(`₹ ${grandTotal.toLocaleString()}`, 190, y + 13, { align: "right" });
+
+            doc.save(`VibeUp_Quote_${user.name.replace(/\s+/g, '_')}.pdf`);
+            showToast("Report delivery successful!", "success");
+        }
+
+        loadBudget();
+    </script>
+</body>
+</html>

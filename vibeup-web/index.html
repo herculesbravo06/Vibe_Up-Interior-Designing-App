@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VibeUp — AI-powered interior design platform. Design your dream home with cinematic 3D visualization and intelligent room generation.">
+    <title>VibeUp | AI Interior Design Platform</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Libraries (CDN — cached globally for speed) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+    
+    <!-- Lenis Smooth Scroll (Awwwards Industry Standard) -->
+    <script src="https://unpkg.com/lenis@1.1.2/dist/lenis.min.js" defer></script>
+</head>
+<body>
+    <!-- Cinematic Grain Overlay -->
+    <div class="noise-overlay"></div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         LOADING SCREEN (Phase 3)
+         ═══════════════════════════════════════════════════════ -->
+    <div id="loader" class="loader">
+        <div class="loader-inner">
+            <!-- CSS 3D Wireframe Cube (Pre-WebGL hint) -->
+            <div class="loader-cube">
+                <div class="cube-face front"></div>
+                <div class="cube-face back"></div>
+                <div class="cube-face right"></div>
+                <div class="cube-face left"></div>
+                <div class="cube-face top"></div>
+                <div class="cube-face bottom"></div>
+            </div>
+
+            <div class="loader-brand">
+                <div class="loader-logo-line"></div>
+                <h2 class="loader-title">Vibe<span>Up</span></h2>
+                <p class="loader-tagline">AI Interior Design</p>
+                <div class="loader-logo-line"></div>
+            </div>
+            <div class="loader-progress">
+                <div class="loader-bar">
+                    <div class="loader-bar-fill" id="loader-bar-fill"></div>
+                </div>
+                <span class="loader-percent" id="loader-percent">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         NAVBAR
+         ═══════════════════════════════════════════════════════ -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-inner">
+            <a href="#" class="nav-logo" data-magnetic>
+                <span class="logo-accent">V</span>ibe<span class="logo-dim">Up</span>
+            </a>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="#hero" class="nav-link" data-magnetic>Home</a></li>
+                <li><a href="#features" class="nav-link" data-magnetic>Features</a></li>
+                <li><a href="#experience" class="nav-link" data-magnetic>Experience</a></li>
+                <li><a href="#showcase" class="nav-link" data-magnetic>Showcase</a></li>
+                <li><a href="#cta" class="nav-link" data-magnetic>Get Started</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button class="btn btn-ghost" id="btn-login" onclick="window.location.href='app/auth/login.html'">Log In</button>
+                <button class="btn btn-primary" id="btn-start" onclick="window.location.href='app/auth/login.html'">Start Designing</button>
+            </div>
+            <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle Menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════════════════
+         HERO SECTION (3D Canvas goes here in Phase 4)
+         ═══════════════════════════════════════════════════════ -->
+    <section class="hero" id="hero">
+        <!-- Three.js canvas will be injected here -->
+        <div id="hero-canvas-container" class="hero-canvas-container"></div>
+
+        <!-- Hero Content Overlay -->
+        <div class="hero-overlay">
+            <div class="hero-content">
+                <p class="hero-eyebrow" id="hero-eyebrow" data-reveal="fade">✦ AI-Powered Interior Design</p>
+                <h1 class="hero-title" id="hero-title" data-reveal="mask">
+                    Design Your <br>
+                    <span class="hero-title-accent">Dream Space</span>
+                </h1>
+                <p class="hero-subtitle" id="hero-subtitle" data-reveal="fade">
+                    Step through the door into a cinematic 3D experience. 
+                    Visualize, customize, and transform any room with the power of AI.
+                </p>
+                <div class="hero-buttons" id="hero-buttons">
+                    <button class="btn btn-primary btn-lg" onclick="window.location.href='app/auth/login.html'">
+                        <span>Enter Experience</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                    <button class="btn btn-outline btn-lg">Watch Demo</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="scroll-indicator" id="scroll-indicator">
+            <div class="scroll-indicator-track">
+                <div class="scroll-indicator-dot"></div>
+            </div>
+            <p>Scroll to explore</p>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         FULL PAGE 3D BACKGROUND CANVAS
+         ═══════════════════════════════════════════════════════ -->
+    <div id="three-canvas-container" class="site-bg-canvas"></div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         3D EXPERIENCE SECTION (Phase 4-5 scrolling text)
+         ═══════════════════════════════════════════════════════ -->
+    <section class="experience" id="experience">
+        
+        <!-- Scroll-synced content panels that overlay 3D -->
+        <div class="experience-scroll-content">
+            <div class="exp-panel" data-step="door">
+                <div class="exp-panel-inner">
+                    <p class="exp-panel-eyebrow">Phase 01</p>
+                    <h2 class="exp-panel-title">The Entrance</h2>
+                    <p class="exp-panel-text">Scroll forward to open the door and step into a new dimension. A blank canvas awaits your vision.</p>
+                </div>
+            </div>
+            <div class="exp-panel" data-step="wireframe">
+                <div class="exp-panel-inner">
+                    <p class="exp-panel-eyebrow">Phase 02</p>
+                    <h2 class="exp-panel-title">The Blueprint</h2>
+                    <p class="exp-panel-text">Before the walls exist, the logic takes shape. Our AI maps out the optimal spatial flow in neon gold wireframes.</p>
+                </div>
+            </div>
+            <div class="exp-panel" data-step="explode">
+                <div class="exp-panel-inner">
+                    <p class="exp-panel-eyebrow">Phase 03</p>
+                    <h2 class="exp-panel-title">Deconstruction</h2>
+                    <p class="exp-panel-text">Architecture pulls apart. Watch as rooms separate into distinct floating frames, revealing the core structure layer by layer.</p>
+                </div>
+            </div>
+            <div class="exp-panel" data-step="reveal">
+                <div class="exp-panel-inner">
+                    <p class="exp-panel-eyebrow">Phase 04</p>
+                    <h2 class="exp-panel-title">Materialization</h2>
+                    <p class="exp-panel-text">From wireframe to reality. Wood, marble, and lighting physics pop into existence, transforming data into luxury spaces.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating 3D Controls (REMOVED per user request) -->
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         GLOBAL CAD HUD (Heads-Up Display)
+         ═══════════════════════════════════════════════════════ -->
+    <div class="hud-grid"></div>
+    <div id="hud-crosshair" class="hud-crosshair">
+        <div class="hud-line-h"></div>
+        <div class="hud-line-v"></div>
+        <div class="hud-coords">[ X: 000 | Y: 000 ]</div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         FEATURES SECTION (Horizontal Scroll Rail)
+         ═══════════════════════════════════════════════════════ -->
+    <section class="features" id="features">
+        
+        <!-- Massive overlapping background text -->
+        <h2 class="bg-title-massive">THE<br>BLUEPRINT</h2>
+
+        <div class="horizontal-scroll-container" id="horizontal-scroll-container">
+            <!-- Title Panel -->
+            <div class="horizontal-panel intro-panel">
+                <p class="section-eyebrow">[ SYSTEM ARCHITECTURE ]</p>
+                <h2 class="section-title">Intelligence Meets <span class="accent">Design</span></h2>
+                <p class="section-subtitle">A professional toolset engineered to transform spatial logic into photorealistic environments via real-time VibeUp generation.</p>
+                <div class="scroll-arrow-hint">
+                    <span>DRAG OR SCROLL</span>
+                    <div class="arrow-line"></div>
+                </div>
+            </div>
+
+            <!-- Feature Panel 1 -->
+            <div class="horizontal-panel feature-panel">
+                <div class="feature-card glass-panel" data-magnetic>
+                    <div class="feature-overlay-grid"></div>
+                    <div class="feature-content-wrap">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                        </div>
+                        <h3 class="feature-title">AI Floorplan Recognition</h3>
+                        <p class="feature-text">Upload blueprints. The neural network maps structural boundaries instantly.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature Panel 2 -->
+            <div class="horizontal-panel feature-panel">
+                <div class="feature-card glass-panel" data-magnetic>
+                    <div class="feature-overlay-grid"></div>
+                    <div class="feature-content-wrap">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                        </div>
+                        <h3 class="feature-title">Real-Time Volumetrics</h3>
+                        <p class="feature-text">Describe the aesthetic. The engine generates 3D spatial lighting in seconds.</p>
+                    </div>
+                </div>
+            </div>
+
+             <!-- Feature Panel 3 -->
+             <div class="horizontal-panel feature-panel">
+                <div class="feature-card glass-panel" data-magnetic>
+                    <div class="feature-overlay-grid"></div>
+                    <div class="feature-content-wrap">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/></svg>
+                        </div>
+                        <h3 class="feature-title">Meta Quest / VR Export</h3>
+                        <p class="feature-text">Export architecture directly to WebXR for 1:1 physical scale walkthroughs.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature Panel 4 -->
+            <div class="horizontal-panel feature-panel">
+                <div class="feature-card glass-panel" data-magnetic>
+                    <div class="feature-overlay-grid"></div>
+                    <div class="feature-content-wrap">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        </div>
+                        <h3 class="feature-title">Smart Asset Placement</h3>
+                        <p class="feature-text">Drag-and-drop intelligent furniture placement. Assets snap intuitively to architectural flow.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature Panel 5 -->
+            <div class="horizontal-panel feature-panel">
+                <div class="feature-card glass-panel" data-magnetic>
+                    <div class="feature-overlay-grid"></div>
+                    <div class="feature-content-wrap">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                        </div>
+                        <h3 class="feature-title">Vastu & Feng Shui</h3>
+                        <p class="feature-text">Automatically optimize layouts and element placements based on deep spatial energy principles.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature Panel 6 -->
+            <div class="horizontal-panel feature-panel">
+                <div class="feature-card glass-panel" data-magnetic>
+                    <div class="feature-overlay-grid"></div>
+                    <div class="feature-content-wrap">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M12 8v8M8 12h8"/></svg>
+                        </div>
+                        <h3 class="feature-title">4K Cinematic Rendering</h3>
+                        <p class="feature-text">Generate ray-traced, photorealistic final renders in seconds directly from the cloud engine.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spacer panel for smooth exit -->
+            <div class="horizontal-panel spacer-panel"></div>
+        </div>
+        
+        <!-- Shatter Overlay for Particles -->
+        <div id="shatter-overlay" style="position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden;"></div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SHOWCASE SECTION
+         ═══════════════════════════════════════════════════════ -->
+    <section class="showcase" id="showcase">
+        <div class="container">
+            <h2 class="section-title">Global <span class="accent">Showcase</span></h2>
+            <p class="section-subtitle" style="margin-bottom: 4rem;">Explore award-winning spaces generated by our AI.</p>
+            
+            <div class="showcase-grid">
+                <div class="showcase-item">
+                    <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=800&q=80" alt="Modern Living">
+                    <div class="showcase-info">
+                        <h4>Neo-Tokyo Skyline Loft</h4>
+                        <p>Generated in 4s</p>
+                    </div>
+                </div>
+                <div class="showcase-item">
+                    <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80" alt="Villa">
+                    <div class="showcase-info">
+                        <h4>Mediterranean Coastal Villa</h4>
+                        <p>Generated in 6s</p>
+                    </div>
+                </div>
+                <div class="showcase-item">
+                    <img src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=800&q=80" alt="Minimalist">
+                    <div class="showcase-info">
+                        <h4>Wabi-Sabi Minimalist Studio</h4>
+                        <p>Generated in 3s</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         FINAL RENDER / CTA (The Viewfinder)
+         ═══════════════════════════════════════════════════════ -->
+    <section class="final-render" id="cta">
+        <div class="viewfinder-frame">
+            <!-- Camera corner marks -->
+            <div class="vf-corner tl"></div><div class="vf-corner tr"></div>
+            <div class="vf-corner bl"></div><div class="vf-corner br"></div>
+            
+            <div class="vf-content">
+                <div class="vf-header">
+                    <span class="vf-rec">● LOGIC TO REALITY</span>
+                    <span class="vf-time">00:00:03:14</span>
+                </div>
+                
+                <h2 class="vf-title">Transform<br><span class="accent">Your Space</span></h2>
+                
+                <div class="vf-stats">
+                    <div class="vf-stat"><span>25K+</span><label>ROOMS</label></div>
+                    <div class="vf-stat"><span>150</span><label>EXPERT</label></div>
+                    <div class="vf-stat"><span>3s</span><label>GENERATE</label></div>
+                </div>
+
+                <div class="vf-action">
+                    <button class="magnetic-btn" data-magnetic>
+                        <span class="btn-text">INITIALIZE PROJECT</span>
+                        <div class="btn-glare"></div>
+                    </button>
+                    <p class="cta-note">System ready. No credit card required.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         FOOTER
+         ═══════════════════════════════════════════════════════ -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="#" class="nav-logo"><span class="logo-accent">V</span>ibe<span class="logo-dim">Up</span></a>
+                    <p class="footer-desc">AI-powered interior design that lets you see your dream home before it's built.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Product</h4>
+                    <a href="#">Features</a>
+                    <a href="#">Pricing</a>
+                    <a href="#">3D Editor</a>
+                    <a href="#">AI Generator</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Press</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <a href="#">Help Center</a>
+                    <a href="#">Contact</a>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 VibeUp. All rights reserved.</p>
+                <div class="footer-socials">
+                    <a href="#" aria-label="Twitter">𝕏</a>
+                    <a href="#" aria-label="Instagram">IG</a>
+                    <a href="#" aria-label="LinkedIn">IN</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Main Script -->
+    <script src="script.js"></script>
+</body>
+</html>

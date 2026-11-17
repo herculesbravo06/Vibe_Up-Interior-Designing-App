@@ -1,0 +1,71 @@
+{
+  "vastu_rules": [
+    {
+      "room": "Entrance",
+      "best_direction": "North, East, or North-East",
+      "rules": [
+        "The main door should be larger than other doors.",
+        "Avoid keeping a garbage bin near the entrance.",
+        "Decorate with auspicious symbols like Om or Swastika."
+      ],
+      "remedies": "If entrance is in South, use a copper Vastu pyramid or a picture of Lord Hanuman."
+    },
+    {
+      "room": "Kitchen",
+      "best_direction": "South-East (Agneya)",
+      "rules": [
+        "The cook should face East while cooking.",
+        "Sink and Stove should not be next to each other (Fire vs Water).",
+        "Avoid placing the kitchen directly under or over a bedroom or toilet."
+      ],
+      "remedies": "If kitchen is in North-East, place a yellow marble slab under the stove or a red bulb in the SE corner."
+    },
+    {
+      "room": "Master Bedroom",
+      "best_direction": "South-West (Nairutya)",
+      "rules": [
+        "Head should point towards South or East while sleeping.",
+        "Avoid mirrors facing the bed.",
+        "The bed should not be placed directly under a beam."
+      ],
+      "remedies": "If bedroom is in North-East, use heavy furniture in the SW corner and keep the NE corner light."
+    },
+    {
+      "room": "Living Room",
+      "best_direction": "North or East",
+      "rules": [
+        "Heavy furniture should be in South or West.",
+        "Electronic appliances should be in South-East.",
+        "Use light colors on walls like white, light yellow, or blue."
+      ],
+      "remedies": "If living room is in South-West, place a crystal bowl with water and rose petals in the North corner."
+    },
+    {
+      "room": "Toilet/Bathroom",
+      "best_direction": "North-West or South-East",
+      "rules": [
+        "Avoid North-East for toilets.",
+        "Keep the door closed when not in use.",
+        "Use light pastel colors."
+      ],
+      "remedies": "If toilet is in North-East, place a bowl of sea salt in the corner and replace it weekly."
+    },
+    {
+      "room": "Pooja Room",
+      "best_direction": "North-East (Ishanya)",
+      "rules": [
+        "Face East or North while praying.",
+        "Use a pyramid-shaped roof if possible.",
+        "Avoid placing the Pooja room under a staircase or next to a toilet."
+      ],
+      "remedies": "If Pooja room is in South, use yellow curtains and a brass lamp."
+    }
+  ],
+  "element_colors": {
+    "North": "Blue/Black (Water)",
+    "East": "Green/Brown (Air/Wood)",
+    "South": "Red/Pink/Orange (Fire)",
+    "West": "White/Grey/Silver (Metal)",
+    "North-East": "Yellow/Gold (Earth/Space)"
+  }
+}

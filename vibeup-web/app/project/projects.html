@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Projects | VibeUp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app.css">
+    <style>
+        .projects-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+
+        .project-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.35s var(--ease-smooth);
+        }
+        .project-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+        }
+
+        .project-thumbnail {
+            height: 160px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 48px;
+            position: relative;
+        }
+        .project-thumbnail::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent 50%, var(--bg-card));
+        }
+
+        .project-details { padding: 16px 20px; }
+        .project-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+        .project-meta { font-size: 12px; color: var(--text-muted); display: flex; gap: 12px; margin-bottom: 12px; }
+
+        .project-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            padding-top: 12px; border-top: 1px solid var(--glass-border);
+        }
+
+        .fade-up { opacity: 0; transform: translateY(16px); animation: fadeUp 0.5s var(--ease-out-expo) forwards; }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <div class="main-content">
+            <a class="page-back" onclick="history.back()" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--text-muted); cursor:pointer; margin-bottom:24px">← Back</a>
+
+            <div class="projects-header fade-up">
+                <div>
+                    <h1 style="font-size:1.6rem; font-weight:700">My Projects</h1>
+                    <p style="font-size:14px; color:var(--text-secondary); margin-top:4px">Your design projects and saved rooms</p>
+                </div>
+                <button class="btn btn-primary" onclick="navigateTo('app/project/new-project.html')">➕ New Project</button>
+            </div>
+
+            <div class="project-grid" id="projects-grid">
+                <div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted)">
+                    <div class="spinner" style="margin:0 auto 12px"></div>
+                    Loading projects...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) {}
+        const user = Auth.getUser();
+        const isDesigner = window.location.pathname.includes('/designer/');
+        renderSidebar('projects', isDesigner ? 'designer' : 'user');
+
+        const bgColors = [
+            'linear-gradient(135deg, #1a1a2e, #16213e)',
+            'linear-gradient(135deg, #2a1a1a, #1a0e0e)',
+            'linear-gradient(135deg, #1a2a1a, #0e1a0e)',
+            'linear-gradient(135deg, #2a2a1a, #1a1a0e)',
+            'linear-gradient(135deg, #1a1a2a, #0e0e1a)',
+        ];
+        const roomIcons = ['🏠', '🛋️', '🛏️', '🍳', '🚿', '📐'];
+
+        async function loadProjects() {
+            const grid = document.getElementById('projects-grid');
+            try {
+                const result = isDesigner 
+                    ? await Api.get(`api/projects.php?designer_id=${user.designerId || user.id}`)
+                    : await Api.getUserProjects(user.id);
+
+                let projects = [];
+                if (result.status === 'success' && Array.isArray(result.data)) {
+                    projects = result.data;
+                } else if (Array.isArray(result)) {
+                    projects = result;
+                }
+
+                // Also check local storage
+                const localProject = localStorage.getItem('vibeup_last_project');
+                if (localProject && projects.length === 0) {
+                    const p = JSON.parse(localProject);
+                    projects.unshift({
+                        id: 'local_1',
+                        project_name: p.room_name || 'Untitled',
+                        room_type: 'Custom Room',
+                        width: p.width, length: p.length, height: p.height,
+                        status: 'draft',
+                        created_at: new Date().toISOString(),
+                    });
+                }
+
+                if (projects.length === 0) {
+                    grid.innerHTML = `
+                        <div style="grid-column:1/-1" class="empty-state">
+                            <div class="empty-state-icon">📁</div>
+                            <div class="empty-state-title">No projects yet</div>
+                            <div class="empty-state-text">Create your first project to get started</div>
+                            <button class="btn btn-primary" style="margin-top:16px" onclick="navigateTo('app/project/new-project.html')">➕ Create Project</button>
+                        </div>`;
+                    return;
+                }
+
+                grid.innerHTML = projects.map((p, i) => {
+                    const statusMap = {
+                        draft: '<span class="badge badge-info">Draft</span>',
+                        active: '<span class="badge badge-success">Active</span>',
+                        completed: '<span class="badge badge-accent">Completed</span>',
+                        pending: '<span class="badge badge-warning">Pending</span>',
+                    };
+                    return `
+                        <div class="project-card fade-up" style="animation-delay:${i * 0.1}s" onclick="openProject('${p.id}', ${p.width || 14}, ${p.length || 12}, ${p.height || 10}, '${escapeHtml(p.project_name || p.room_name || 'Room')}')">
+                            <div class="project-thumbnail" style="background:${bgColors[i % bgColors.length]}">
+                                ${roomIcons[i % roomIcons.length]}
+                            </div>
+                            <div class="project-details">
+                                <div class="project-name">${escapeHtml(p.project_name || p.room_name || 'Untitled')}</div>
+                                <div class="project-meta">
+                                    <span>📐 ${p.width || '?'}×${p.length || '?'} ft</span>
+                                    <span>📅 ${timeAgo(p.created_at)}</span>
+                                </div>
+                                <div class="project-footer">
+                                    ${statusMap[p.status] || statusMap.draft}
+                                    <span style="color:var(--text-dim); font-size:12px">Open →</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted)">Could not load projects</div>`;
+            }
+        }
+
+        function openProject(id, w, l, h, name) {
+            navigateTo(`app/project/workspace.html?type=room&name=${encodeURIComponent(name)}&w=${w}&l=${l}&h=${h}&project_id=${id}`);
+        }
+
+        loadProjects();
+    </script>
+</body>
+</html>

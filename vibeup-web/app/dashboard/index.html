@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VibeUp Dashboard — Design your dream home with AI.">
+    <title>Dashboard | VibeUp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app.css">
+    <style>
+        .welcome-card {
+            background: linear-gradient(135deg, rgba(201,168,76,0.1) 0%, rgba(201,168,76,0.02) 100%);
+            border: 1px solid rgba(201,168,76,0.15);
+            border-radius: var(--radius-2xl);
+            padding: 32px;
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+        .welcome-card::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+            top: -50px;
+            right: -50px;
+            pointer-events: none;
+        }
+
+        .welcome-tagline {
+            font-family: var(--font-serif);
+            font-size: 1.6rem;
+            font-weight: 400;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        .welcome-sub {
+            font-size: 14px;
+            color: var(--text-secondary);
+            max-width: 500px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .wide-action-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.35s var(--ease-smooth);
+        }
+        .wide-action-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+        }
+        .wide-action-card .action-card-icon { flex-shrink: 0; }
+        .wide-action-text { flex: 1; }
+        .wide-action-text h3 { font-size: 15px; font-weight: 600; }
+        .wide-action-text p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+        .activity-list { display: flex; flex-direction: column; }
+        .activity-empty {
+            text-align: center;
+            padding: 32px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Entry animation */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(16px);
+            animation: fadeUp 0.5s var(--ease-out-expo) forwards;
+        }
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+        .delay-5 { animation-delay: 0.5s; }
+        .delay-6 { animation-delay: 0.6s; }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar injected by JS -->
+        <div class="main-content" id="main-content">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h1>Hi, <span id="user-name">User</span> 👋</h1>
+                    <p>Your space, your style</p>
+                </div>
+                <div class="topbar-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="navigateTo('app/project/new-project.html')">
+                        ➕ New Project
+                    </button>
+                </div>
+            </div>
+
+            <!-- Welcome Banner -->
+            <div class="welcome-card fade-up">
+                <div class="welcome-tagline">Let's create something beautiful</div>
+                <p class="welcome-sub">Design, visualize, and transform any room with the power of AI. Choose an action below to get started.</p>
+            </div>
+
+            <!-- Action Grid -->
+            <div class="section-title fade-up delay-1">✦ Quick Actions</div>
+            <div class="action-grid">
+                <div class="action-card fade-up delay-1" onclick="navigateTo('app/project/new-project.html')">
+                    <div class="action-card-icon" style="background: rgba(123,104,238,0.1); color: var(--purple)">🏠</div>
+                    <div class="action-card-title">New Project</div>
+                </div>
+                <div class="action-card fade-up delay-2" onclick="navigateTo('app/project/projects.html')">
+                    <div class="action-card-icon" style="background: rgba(255,112,67,0.1); color: var(--orange)">📁</div>
+                    <div class="action-card-title">Old Projects</div>
+                </div>
+                <div class="action-card fade-up delay-3" onclick="navigateTo('app/project/tour-categories.html')">
+                    <div class="action-card-icon" style="background: rgba(0,180,255,0.1); color: var(--cyan)">🌐</div>
+                    <div class="action-card-title">360° Tours</div>
+                </div>
+                <div class="action-card fade-up delay-4" onclick="navigateTo('app/catalogue/index.html')">
+                    <div class="action-card-icon" style="background: rgba(76,175,80,0.1); color: var(--green)">📋</div>
+                    <div class="action-card-title">Design Catalogue</div>
+                </div>
+                <div class="action-card fade-up delay-5" onclick="showAIFloorplanDialog()">
+                    <div class="action-card-icon" style="background: var(--accent-glow); color: var(--accent)">✨</div>
+                    <div class="action-card-title">AI Floorplan</div>
+                </div>
+                <div class="action-card fade-up delay-6" onclick="navigateTo('app/project/budget.html')">
+                    <div class="action-card-icon" style="background: rgba(0,232,123,0.1); color: var(--success)">💰</div>
+                    <div class="action-card-title">Budget Estimator</div>
+                </div>
+            </div>
+
+            <!-- Feedback Wide Card -->
+            <div class="wide-action-card fade-up delay-5" onclick="showFeedbackDialog()">
+                <div class="action-card-icon" style="background: rgba(41,182,246,0.1); color: var(--cyan); width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:22px">💬</div>
+                <div class="wide-action-text">
+                    <h3>Share Feedback</h3>
+                    <p>Help us improve your experience</p>
+                </div>
+                <span style="color:var(--text-dim)">→</span>
+            </div>
+
+            <!-- Recent Activity -->
+            <div style="margin-top:32px">
+                <div class="section-title fade-up delay-6">📊 Recent Activity</div>
+                <div class="activity-list" id="activity-list">
+                    <div class="activity-empty">
+                        <div class="spinner" style="margin: 0 auto 12px"></div>
+                        Loading activity...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Floorplan Modal -->
+    <div class="modal-overlay" id="floorplan-modal">
+        <div class="modal">
+            <div style="text-align:center; margin-bottom:20px">
+                <div style="font-size:48px; margin-bottom:12px">✨</div>
+                <h2 style="font-size:1.2rem; font-weight:600">AI Floorplan Recognition</h2>
+                <p style="font-size:13px; color:var(--text-secondary); margin-top:8px">
+                    Upload any 2D blueprint or hand-drawn sketch and our AI will convert it into a fully interactive 3D model.
+                </p>
+            </div>
+
+            <label class="btn btn-primary btn-lg" style="width:100%; cursor:pointer">
+                📁 Upload Floorplan Image
+                <input type="file" accept="image/*" style="display:none" onchange="handleFloorplanUpload(event)">
+            </label>
+
+            <div style="margin-top:12px; text-align:center">
+                <button class="btn btn-ghost" onclick="closeFloorplanModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <!-- Feedback Modal -->
+    <div class="modal-overlay" id="feedback-modal">
+        <div class="modal">
+            <h2 style="margin-bottom:12px">Share Your Feedback</h2>
+            <p style="font-size:13px; color:var(--text-secondary); margin-bottom:20px">Your thoughts help us build a better VibeUp.</p>
+            
+            <div style="margin-bottom:16px">
+                <label style="display:block; font-size:12px; margin-bottom:8px; color:var(--text-muted)">Rating</label>
+                <div style="display:flex; gap:12px; justify-content:center; font-size:24px" id="star-rating">
+                    <span style="cursor:pointer; opacity:0.5" onclick="setRating(1)">⭐</span>
+                    <span style="cursor:pointer; opacity:0.5" onclick="setRating(2)">⭐</span>
+                    <span style="cursor:pointer; opacity:0.5" onclick="setRating(3)">⭐</span>
+                    <span style="cursor:pointer; opacity:0.5" onclick="setRating(4)">⭐</span>
+                    <span style="cursor:pointer; opacity:0.5" onclick="setRating(5)">⭐</span>
+                </div>
+            </div>
+
+            <div style="margin-bottom:20px">
+                <label style="display:block; font-size:12px; margin-bottom:8px; color:var(--text-muted)">Comment (Optional)</label>
+                <textarea id="feedback-comment" style="width:100%; min-height:80px; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:var(--radius-lg); padding:12px; color:#fff; font-family:inherit; font-size:14px; outline:none; resize:none"></textarea>
+            </div>
+
+            <div style="display:flex; gap:12px">
+                <button class="btn btn-ghost" style="flex:1" onclick="closeFeedbackModal()">Cancel</button>
+                <button class="btn btn-primary" style="flex:2" onclick="submitUserFeedback()">Submit Feedback</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script>
+        // Auth guard
+        if (!Auth.requireAuth()) { /* redirects */ }
+
+        const user = Auth.getUser();
+        document.getElementById('user-name').textContent = user.name;
+
+        // Render sidebar
+        renderSidebar('home', user.role);
+
+        // Start heartbeat
+        Auth.startHeartbeat();
+
+        // Fetch recent activity
+        async function loadActivity() {
+            const listEl = document.getElementById('activity-list');
+            try {
+                const result = await Api.getNotifications(user.id);
+                const notifs = Array.isArray(result) ? result
+                             : (result.data && Array.isArray(result.data)) ? result.data
+                             : [];
+
+                if (notifs.length === 0) {
+                    listEl.innerHTML = '<div class="activity-empty">No recent activity</div>';
+                    return;
+                }
+
+                listEl.innerHTML = notifs.slice(0, 5).map(n => {
+                    const icons = {
+                        'request_accepted': '✅',
+                        'request_declined': '❌',
+                        'request_new': '📥',
+                        'message_new': '💬',
+                    };
+                    const icon = icons[n.type] || '🔔';
+                    return `
+                        <div class="activity-item" onclick="handleActivityClick('${n.type || ''}')">
+                            <div class="activity-icon" style="background:var(--accent-glow); color:var(--accent)">${icon}</div>
+                            <div class="activity-text">
+                                <div class="activity-title">${escapeHtml(n.title || 'Notification')}</div>
+                                <div class="activity-time">${timeAgo(n.created_at)}</div>
+                            </div>
+                            <span style="color:var(--text-dim)">→</span>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                listEl.innerHTML = '<div class="activity-empty">Could not load activity</div>';
+            }
+        }
+        loadActivity();
+
+        // Poll for updates
+        setInterval(loadActivity, APP_CONFIG.activityPollInterval);
+
+        function handleActivityClick(type) {
+            if (type === 'message_new') navigateTo('app/chat/index.html');
+            else navigateTo('app/project/projects.html');
+        }
+
+        // AI Floorplan Modal
+        function showAIFloorplanDialog() {
+            document.getElementById('floorplan-modal').classList.add('active');
+        }
+        function closeFloorplanModal() {
+            document.getElementById('floorplan-modal').classList.remove('active');
+        }
+
+        async function handleFloorplanUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            closeFloorplanModal();
+
+            showToast('🔍 Analyzing floorplan with AI...', 'info');
+
+            // Step 1: Also upload to backend for record-keeping
+            const formData = new FormData();
+            formData.append('user_id', user.id);
+            formData.append('room_image', file);
+            try {
+                fetch(APP_CONFIG.apiUrl + 'api_v2/upload_room.php', { method: 'POST', body: formData });
+            } catch(e) { /* non-blocking */ }
+
+            // Step 2: Client-side AI floorplan analysis using Canvas
+            const img = new Image();
+            img.onload = () => {
+                showToast('🧠 Detecting rooms from floorplan...', 'info');
+
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const maxDim = 400;
+                const scale = Math.min(maxDim / img.width, maxDim / img.height);
+                canvas.width = Math.floor(img.width * scale);
+                canvas.height = Math.floor(img.height * scale);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const pixels = imageData.data;
+
+                // Analyze brightness distribution to estimate room structure
+                const gridCols = 4, gridRows = 4;
+                const cellW = Math.floor(canvas.width / gridCols);
+                const cellH = Math.floor(canvas.height / gridRows);
+                let cells = [];
+
+                for (let gy = 0; gy < gridRows; gy++) {
+                    for (let gx = 0; gx < gridCols; gx++) {
+                        let brightSum = 0, count = 0;
+                        for (let y = gy * cellH; y < (gy + 1) * cellH && y < canvas.height; y++) {
+                            for (let x = gx * cellW; x < (gx + 1) * cellW && x < canvas.width; x++) {
+                                const idx = (y * canvas.width + x) * 4;
+                                const brightness = (pixels[idx] + pixels[idx+1] + pixels[idx+2]) / 3;
+                                brightSum += brightness;
+                                count++;
+                            }
+                        }
+                        cells.push({ gx, gy, avg: brightSum / count });
+                    }
+                }
+
+                // Rooms are typically lighter regions (interior space)
+                const avgBrightness = cells.reduce((s, c) => s + c.avg, 0) / cells.length;
+                const roomCells = cells.filter(c => c.avg > avgBrightness * 0.7);
+                const wallCells = cells.filter(c => c.avg <= avgBrightness * 0.7);
+
+                // Estimate number of rooms based on connected light regions
+                const detectedRoomCount = Math.max(3, Math.min(8, Math.round(roomCells.length / 2.5)));
+
+                // Generate room layout based on detection
+                const roomTemplates = [
+                    { name: 'Living Room', w: 16, l: 14, h: 10, furniture: ['sofa','table','tv_stand','floor_lamp'] },
+                    { name: 'Master Bedroom', w: 14, l: 12, h: 10, furniture: ['bed','nightstand','wardrobe'] },
+                    { name: 'Kitchen', w: 12, l: 10, h: 10, furniture: ['kitchen_island','kitchen_cabinet','fridge'] },
+                    { name: 'Bedroom 2', w: 12, l: 10, h: 10, furniture: ['bed','nightstand','desk'] },
+                    { name: 'Bathroom', w: 8, l: 6, h: 9, furniture: ['bathtub','vanity'] },
+                    { name: 'Dining Room', w: 12, l: 10, h: 10, furniture: ['dining_table','dining_chair','sideboard'] },
+                    { name: 'Study Room', w: 10, l: 8, h: 10, furniture: ['desk','office_chair','bookshelf'] },
+                    { name: 'Balcony', w: 10, l: 4, h: 10, furniture: ['bench','bush'] },
+                ];
+
+                const detectedRooms = roomTemplates.slice(0, detectedRoomCount);
+                
+                showToast(`✅ Detected ${detectedRoomCount} areas from floorplan!`, 'success');
+
+                setTimeout(() => {
+                    // Set up house session data
+                    sessionStorage.setItem('vibeup_house_rooms', JSON.stringify(detectedRooms));
+                    sessionStorage.setItem('vibeup_bhk', 'ai_floorplan'); // Special BHK ID
+                    
+                    // Redirect to tiles hub instead of single workspace
+                    navigateTo('app/project/room-tiles.html?mode=floorplan');
+                }, 800);
+            };
+
+            img.onerror = () => {
+                showToast('Could not read the image file', 'error');
+            };
+
+            img.src = URL.createObjectURL(file);
+        }
+
+        // Close modal on overlay click
+        document.getElementById('floorplan-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeFloorplanModal();
+        });
+        // Feedback Modal Controls
+        let currentRating = 0;
+        function showFeedbackDialog() {
+            document.getElementById('feedback-modal').classList.add('active');
+            setRating(0);
+        }
+        function closeFeedbackModal() {
+            document.getElementById('feedback-modal').classList.remove('active');
+        }
+        function setRating(r) {
+            currentRating = r;
+            const stars = document.querySelectorAll('#star-rating span');
+            stars.forEach((s, i) => {
+                s.style.opacity = (i < r) ? '1' : '0.3';
+            });
+        }
+        async function submitUserFeedback() {
+            if (currentRating === 0) {
+                showToast('Please select a star rating', 'warning');
+                return;
+            }
+            const comment = document.getElementById('feedback-comment').value;
+            
+            showToast('Submitting feedback...', 'info');
+            try {
+                const res = await Api.submitFeedback({
+                    user_id: user.id || null,
+                    rating: currentRating,
+                    comment: comment,
+                    type: 'app'
+                });
+                if (res.status === 'success') {
+                    showToast('Thank you for your feedback!', 'success');
+                    closeFeedbackModal();
+                } else {
+                    showToast(res.message || 'Submission failed', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to submit feedback', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

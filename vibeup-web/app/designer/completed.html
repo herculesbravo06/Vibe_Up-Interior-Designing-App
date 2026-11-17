@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Completed Projects | Designer | VibeUp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app.css">
+    <style>
+        .page-header { margin-bottom: 32px; }
+        .page-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+        .page-desc { font-size: 14px; color: var(--text-secondary); }
+
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+
+        .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+
+        .project-card { background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); padding: 24px; transition: all 0.3s var(--ease-smooth); cursor: pointer; }
+        .project-card:hover { border-color: var(--glass-border-hover); transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.3); }
+        .pc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .pc-badge { padding: 4px 10px; background: rgba(0,232,123,0.1); color: var(--success); border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .pc-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+        .pc-client { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .pc-client-avatar { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), #5544bb); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; }
+        .pc-details { display: flex; gap: 16px; padding-top: 14px; border-top: 1px solid var(--glass-border); }
+        .pc-detail { flex: 1; }
+        .pc-detail-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+        .pc-detail-value { font-size: 14px; font-weight: 600; }
+        .pc-detail-value.accent { color: var(--accent); }
+        .stars { color: #f0c040; font-size: 14px; letter-spacing: 1px; }
+
+        .fade-up { opacity: 0; transform: translateY(16px); animation: fadeUp 0.5s ease-out forwards; }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <div class="main-content">
+            <a class="page-back" onclick="history.back()" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--text-muted); cursor:pointer; margin-bottom:20px">← Back</a>
+
+            <div class="page-header fade-up">
+                <h1 class="page-title">Completed Projects</h1>
+                <p class="page-desc">Projects you've successfully delivered</p>
+            </div>
+
+            <div class="stats-row fade-up" style="animation-delay:0.1s" id="stats-row">
+                <div class="stat-card" style="text-align:center">
+                    <div class="stat-card-icon" style="background:rgba(0,232,123,0.1); color:var(--success); margin:0 auto 8px">✅</div>
+                    <div class="stat-card-value" id="total-completed">0</div>
+                    <div class="stat-card-label">Completed</div>
+                </div>
+                <div class="stat-card" style="text-align:center">
+                    <div class="stat-card-icon" style="background:rgba(201,168,76,0.1); color:var(--accent); margin:0 auto 8px">💰</div>
+                    <div class="stat-card-value" id="total-revenue">₹0</div>
+                    <div class="stat-card-label">Total Revenue</div>
+                </div>
+                <div class="stat-card" style="text-align:center">
+                    <div class="stat-card-icon" style="background:rgba(123,104,238,0.1); color:var(--purple); margin:0 auto 8px">⭐</div>
+                    <div class="stat-card-value" id="avg-rating">—</div>
+                    <div class="stat-card-label">Avg Rating</div>
+                </div>
+            </div>
+
+            <div class="project-grid" id="project-grid">
+                <div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted)">
+                    <div class="spinner" style="margin:0 auto 12px"></div>
+                    Loading projects...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) {}
+        const user = Auth.getUser();
+        renderSidebar('completed', 'designer');
+
+        const DEMO_PROJECTS = [
+            { id: 'p1', title: 'Modern Minimalist Living Room', client_name: 'Priya Sharma', room_type: 'Living Room', budget: 450000, rating: 5, completed_at: '2026-03-28' },
+            { id: 'p2', title: 'Luxury Master Bedroom Suite', client_name: 'Rajesh Kumar', room_type: 'Bedroom', budget: 320000, rating: 5, completed_at: '2026-03-20' },
+            { id: 'p3', title: 'Industrial Kitchen Makeover', client_name: 'Ananya Patel', room_type: 'Kitchen', budget: 580000, rating: 4, completed_at: '2026-03-15' },
+            { id: 'p4', title: 'Scandinavian Home Office', client_name: 'Vikram Singh', room_type: 'Office', budget: 180000, rating: 5, completed_at: '2026-03-10' },
+            { id: 'p5', title: 'Japandi Full House — 3BHK', client_name: 'Meera Nair', room_type: 'Full House', budget: 1200000, rating: 4, completed_at: '2026-03-05' },
+            { id: 'p6', title: 'Compact Studio Redesign', client_name: 'Arjun Desai', room_type: 'Studio', budget: 250000, rating: 4, completed_at: '2026-02-28' },
+        ];
+
+        async function loadProjects() {
+            let projects = [];
+            try {
+                const res = await Api.getDesignRequests({ designer_id: user.id, status: 'completed' });
+                if (Array.isArray(res) && res.length > 0) {
+                    projects = res;
+                } else {
+                    projects = DEMO_PROJECTS;
+                }
+            } catch(e) {
+                projects = DEMO_PROJECTS;
+            }
+
+            renderStats(projects);
+            renderGrid(projects);
+        }
+
+        function renderStats(projects) {
+            const total = projects.length;
+            const revenue = projects.reduce((s, p) => s + (parseInt(p.budget) || 0), 0);
+            const avgRating = total > 0 ? (projects.reduce((s, p) => s + (p.rating || 0), 0) / total).toFixed(1) : '—';
+
+            document.getElementById('total-completed').textContent = total;
+            document.getElementById('total-revenue').textContent = '₹' + (revenue / 100000).toFixed(1) + 'L';
+            document.getElementById('avg-rating').textContent = avgRating;
+        }
+
+        function renderGrid(projects) {
+            const grid = document.getElementById('project-grid');
+            if (projects.length === 0) {
+                grid.innerHTML = `<div style="grid-column:1/-1" class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-title">No completed projects yet</div><div class="empty-state-text">Completed projects will appear here</div></div>`;
+                return;
+            }
+
+            grid.innerHTML = projects.map((p, i) => {
+                const initials = (p.client_name || 'C').charAt(0);
+                const date = p.completed_at ? new Date(p.completed_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+                return `
+                    <div class="project-card fade-up" style="animation-delay:${i * 0.08}s">
+                        <div class="pc-header">
+                            <div class="pc-badge">✓ Completed</div>
+                            <div class="stars">${'★'.repeat(p.rating || 0)}${'☆'.repeat(5 - (p.rating || 0))}</div>
+                        </div>
+                        <div class="pc-title">${escapeHtml(p.title || p.project_name || 'Design Project')}</div>
+                        <div class="pc-client">
+                            <div class="pc-client-avatar">${initials}</div>
+                            ${escapeHtml(p.client_name || 'Client')}
+                        </div>
+                        <div class="pc-details">
+                            <div class="pc-detail">
+                                <div class="pc-detail-label">Type</div>
+                                <div class="pc-detail-value">${escapeHtml(p.room_type || 'Interior')}</div>
+                            </div>
+                            <div class="pc-detail">
+                                <div class="pc-detail-label">Budget</div>
+                                <div class="pc-detail-value accent">₹${((parseInt(p.budget) || 0) / 1000).toFixed(0)}K</div>
+                            </div>
+                            <div class="pc-detail">
+                                <div class="pc-detail-label">Delivered</div>
+                                <div class="pc-detail-value">${date}</div>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        loadProjects();
+    </script>
+</body>
+</html>

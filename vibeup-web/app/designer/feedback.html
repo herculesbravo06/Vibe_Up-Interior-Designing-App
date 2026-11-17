@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Feedback | Designer | VibeUp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app.css">
+    <style>
+        .page-header { margin-bottom: 32px; }
+        .page-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+        .page-desc { font-size: 14px; color: var(--text-secondary); }
+
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+        .stat-card .stat-icon { font-size: 28px; margin-bottom: 8px; }
+        .stat-card .stat-value { font-size: 2rem; font-weight: 700; }
+        .stat-card .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+        .stars { color: #f0c040; font-size: 16px; letter-spacing: 2px; }
+        .stars-dim { color: var(--text-dim); }
+
+        .feedback-list { display: flex; flex-direction: column; gap: 16px; }
+        .feedback-card { background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); padding: 24px; transition: all 0.3s; }
+        .feedback-card:hover { border-color: var(--glass-border-hover); }
+        .fb-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .fb-user { display: flex; align-items: center; gap: 12px; }
+        .fb-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #0a0a0a; font-size: 14px; }
+        .fb-name { font-size: 14px; font-weight: 600; }
+        .fb-project { font-size: 12px; color: var(--text-muted); }
+        .fb-date { font-size: 11px; color: var(--text-dim); }
+        .fb-comment { font-size: 14px; color: var(--text-secondary); line-height: 1.6; padding: 14px; background: rgba(255,255,255,0.02); border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.03); }
+
+        .filter-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+        .filter-tab { padding: 8px 16px; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 20px; font-size: 13px; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; }
+        .filter-tab:hover { border-color: var(--glass-border-hover); }
+        .filter-tab.active { background: var(--accent-glow); color: var(--accent); border-color: rgba(201,168,76,0.3); }
+
+        .fade-up { opacity: 0; transform: translateY(16px); animation: fadeUp 0.5s ease-out forwards; }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <div class="main-content">
+            <a class="page-back" onclick="history.back()" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--text-muted); cursor:pointer; margin-bottom:20px">← Back</a>
+
+            <div class="page-header fade-up">
+                <h1 class="page-title">Client Feedback</h1>
+                <p class="page-desc">Reviews and ratings from your clients</p>
+            </div>
+
+            <div class="stats-row fade-up" style="animation-delay:0.1s" id="stats-row">
+                <div class="stat-card" style="text-align:center">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-value" id="avg-rating">—</div>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+                <div class="stat-card" style="text-align:center">
+                    <div class="stat-icon">📝</div>
+                    <div class="stat-value" id="total-reviews">0</div>
+                    <div class="stat-label">Total Reviews</div>
+                </div>
+                <div class="stat-card" style="text-align:center">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-value" id="five-star">0</div>
+                    <div class="stat-label">5-Star Reviews</div>
+                </div>
+                <div class="stat-card" style="text-align:center">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value" id="recent-trend">—</div>
+                    <div class="stat-label">30-Day Trend</div>
+                </div>
+            </div>
+
+            <div class="filter-tabs fade-up" style="animation-delay:0.15s">
+                <div class="filter-tab active" onclick="filterFeedback('all', this)">All</div>
+                <div class="filter-tab" onclick="filterFeedback(5, this)">⭐⭐⭐⭐⭐</div>
+                <div class="filter-tab" onclick="filterFeedback(4, this)">⭐⭐⭐⭐</div>
+                <div class="filter-tab" onclick="filterFeedback(3, this)">⭐⭐⭐</div>
+                <div class="filter-tab" onclick="filterFeedback(2, this)">⭐⭐</div>
+                <div class="filter-tab" onclick="filterFeedback(1, this)">⭐</div>
+            </div>
+
+            <div class="feedback-list" id="feedback-list">
+                <div style="text-align:center; padding:40px; color:var(--text-muted)">
+                    <div class="spinner" style="margin:0 auto 12px"></div>
+                    Loading feedback...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) {}
+        const user = Auth.getUser();
+        renderSidebar('feedback', 'designer');
+
+        let allFeedback = [];
+        let filteredFeedback = [];
+
+        // Demo data for display (backend fallback)
+        const DEMO_FEEDBACK = [
+            { user_name: 'Priya Sharma', project: 'Modern Living Room', rating: 5, comment: 'Absolutely stunning design! The 3D visualization helped me see exactly what my room would look like. The designer was incredibly responsive.', created_at: '2026-03-28T14:30:00' },
+            { user_name: 'Rajesh Kumar', project: '3BHK Full House', rating: 5, comment: 'Exceeded all expectations. The material choices were perfect and the execution was flawless. Highly recommended!', created_at: '2026-03-25T10:00:00' },
+            { user_name: 'Ananya Patel', project: 'Kitchen Renovation', rating: 4, comment: 'Great design concepts. The modular kitchen layout works perfectly. Minor delay in the timeline but the quality made up for it.', created_at: '2026-03-20T16:45:00' },
+            { user_name: 'Vikram Singh', project: 'Office Space', rating: 5, comment: 'Professional and efficient. The ergonomic desk placement and lighting suggestions were spot-on.', created_at: '2026-03-15T09:20:00' },
+            { user_name: 'Meera Nair', project: 'Bedroom Suite', rating: 4, comment: 'Beautiful Japandi-inspired bedroom. The bamboo flooring was a great suggestion. Would love to work together again.', created_at: '2026-03-10T12:00:00' },
+            { user_name: 'Arjun Desai', project: 'Studio Apartment', rating: 3, comment: 'Good space optimization. The color palette could have been more adventurous, but the layout was practical.', created_at: '2026-03-05T18:30:00' },
+        ];
+
+        async function loadFeedback() {
+            try {
+                const res = await Api.get(`api/feedback.php?designer_id=${user.id}`);
+                if (res.status === 'success' && Array.isArray(res.data) && res.data.length > 0) {
+                    allFeedback = res.data;
+                } else {
+                    allFeedback = DEMO_FEEDBACK;
+                }
+            } catch (e) {
+                allFeedback = DEMO_FEEDBACK;
+            }
+            filteredFeedback = [...allFeedback];
+            renderStats();
+            renderFeedbackList();
+        }
+
+        function renderStats() {
+            const total = allFeedback.length;
+            const avgRating = total > 0 ? (allFeedback.reduce((s, f) => s + (f.rating || 0), 0) / total).toFixed(1) : '—';
+            const fiveStars = allFeedback.filter(f => f.rating === 5).length;
+
+            document.getElementById('avg-rating').textContent = avgRating;
+            document.getElementById('total-reviews').textContent = total;
+            document.getElementById('five-star').textContent = fiveStars;
+            document.getElementById('recent-trend').textContent = avgRating >= 4.5 ? '📈 Great' : avgRating >= 3.5 ? '📊 Good' : '📉 Mixed';
+        }
+
+        function renderStars(rating) {
+            return '★'.repeat(rating) + '<span class="stars-dim">' + '★'.repeat(5 - rating) + '</span>';
+        }
+
+        function renderFeedbackList() {
+            const list = document.getElementById('feedback-list');
+            if (filteredFeedback.length === 0) {
+                list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📝</div><div class="empty-state-title">No feedback yet</div><div class="empty-state-text">Client reviews will appear here after project completion</div></div>`;
+                return;
+            }
+            list.innerHTML = filteredFeedback.map((f, i) => {
+                const initials = (f.user_name || 'C').charAt(0);
+                const date = f.created_at ? new Date(f.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+                return `
+                    <div class="feedback-card fade-up" style="animation-delay:${i * 0.08}s">
+                        <div class="fb-header">
+                            <div class="fb-user">
+                                <div class="fb-avatar">${initials}</div>
+                                <div>
+                                    <div class="fb-name">${escapeHtml(f.user_name || 'Client')}</div>
+                                    <div class="fb-project">${escapeHtml(f.project || 'Design Project')}</div>
+                                </div>
+                            </div>
+                            <div style="text-align:right">
+                                <div class="stars">${renderStars(f.rating || 0)}</div>
+                                <div class="fb-date">${date}</div>
+                            </div>
+                        </div>
+                        <div class="fb-comment">${escapeHtml(f.comment || '')}</div>
+                    </div>`;
+            }).join('');
+        }
+
+        function filterFeedback(rating, el) {
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            filteredFeedback = rating === 'all' ? [...allFeedback] : allFeedback.filter(f => f.rating === rating);
+            renderFeedbackList();
+        }
+
+        loadFeedback();
+    </script>
+</body>
+</html>

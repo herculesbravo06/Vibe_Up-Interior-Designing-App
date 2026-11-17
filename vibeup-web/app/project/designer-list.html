@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Designers | VibeUp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app.css">
+    <style>
+        .designer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .designer-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-2xl);
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.35s var(--ease-smooth);
+        }
+        .designer-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(201,168,76,0.08);
+        }
+
+        .designer-avatar {
+            width: 80px; height: 80px; border-radius: 50%;
+            margin: 0 auto 16px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; font-weight: 700; color: #0a0a0a;
+            position: relative;
+        }
+        .designer-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .designer-online {
+            width: 14px; height: 14px; border-radius: 50%; background: var(--success);
+            position: absolute; bottom: 2px; right: 2px; border: 2px solid var(--bg-card);
+        }
+
+        .designer-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+        .designer-specialty { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
+
+        .designer-stats {
+            display: flex; justify-content: center; gap: 20px;
+            padding-top: 12px; border-top: 1px solid var(--glass-border);
+        }
+        .designer-stat { text-align: center; }
+        .designer-stat-value { font-size: 15px; font-weight: 700; color: var(--accent); }
+        .designer-stat-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+
+        .fade-up { opacity: 0; transform: translateY(16px); animation: fadeUp 0.5s var(--ease-out-expo) forwards; }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <div class="main-content">
+            <a class="page-back" onclick="history.back()" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--text-muted); cursor:pointer; margin-bottom:24px">← Back</a>
+
+            <div class="fade-up">
+                <h1 style="font-size:1.6rem; font-weight:700; margin-bottom:4px">Find Designers</h1>
+                <p style="font-size:14px; color:var(--text-secondary)">Browse expert interior designers to bring your vision to life</p>
+            </div>
+
+            <div class="designer-grid" id="designer-grid">
+                <div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted)">
+                    <div class="spinner" style="margin:0 auto 12px"></div>
+                    Loading designers...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hire Modal -->
+    <div class="modal-overlay" id="hire-modal">
+        <div class="modal">
+            <h2 style="font-size:1.2rem; font-weight:600; margin-bottom:16px">Send Design Request</h2>
+            <div class="form-group">
+                <label class="form-label">Project Description</label>
+                <textarea class="form-input" id="request-desc" rows="3" placeholder="Describe your design needs..."></textarea>
+            </div>
+            <div style="display:flex; gap:12px">
+                <div class="form-group" style="flex:1">
+                    <label class="form-label">Room Type</label>
+                    <select class="form-input" id="request-room">
+                        <option>Living Room</option>
+                        <option>Bedroom</option>
+                        <option>Kitchen</option>
+                        <option>Bathroom</option>
+                        <option>Office</option>
+                        <option>Full House</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex:1">
+                    <label class="form-label">Budget (₹)</label>
+                    <input class="form-input" id="request-budget" type="number" placeholder="50000">
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:8px">
+                <button class="btn btn-primary" style="flex:1" onclick="submitRequest()">Send Request</button>
+                <button class="btn btn-ghost" onclick="closeHireModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) {}
+        const user = Auth.getUser();
+        renderSidebar('designers', user.role === 'designer' ? 'designer' : 'user');
+
+        let selectedDesigner = null;
+
+        async function loadDesigners() {
+            const grid = document.getElementById('designer-grid');
+            try {
+                const result = await Api.getDesigners();
+                let designers = [];
+                if (result.status === 'success' && Array.isArray(result.data)) {
+                    designers = result.data;
+                } else if (Array.isArray(result)) {
+                    designers = result;
+                }
+
+                if (designers.length === 0) {
+                    grid.innerHTML = `
+                        <div style="grid-column:1/-1" class="empty-state">
+                            <div class="empty-state-icon">👤</div>
+                            <div class="empty-state-title">No designers available</div>
+                            <div class="empty-state-text">Designers will appear here when they register</div>
+                        </div>`;
+                    return;
+                }
+
+                grid.innerHTML = designers.map((d, i) => {
+                    const initials = (d.name || 'D').charAt(0).toUpperCase();
+                    const hasImage = d.profile_image;
+                    return `
+                        <div class="designer-card fade-up" style="animation-delay:${i * 0.1}s" onclick="openHireModal('${d.id}', '${escapeHtml(d.name || 'Designer')}')">
+                            <div class="designer-avatar">
+                                ${hasImage ? `<img src="${APP_CONFIG.phpApi}${d.profile_image}" alt="${escapeHtml(d.name)}" onerror="this.remove()">` : initials}
+                                <div class="designer-online"></div>
+                            </div>
+                            <div class="designer-name">${escapeHtml(d.name || 'Designer')}</div>
+                            <div class="designer-specialty">${escapeHtml(d.specialty || 'Interior Designer')}</div>
+                            <div class="designer-stats">
+                                <div class="designer-stat">
+                                    <div class="designer-stat-value">${d.projects || 0}</div>
+                                    <div class="designer-stat-label">Projects</div>
+                                </div>
+                                <div class="designer-stat">
+                                    <div class="designer-stat-value">${d.rating || '4.5'}</div>
+                                    <div class="designer-stat-label">Rating</div>
+                                </div>
+                                <div class="designer-stat">
+                                    <div class="designer-stat-value">${d.experience || '5'}+</div>
+                                    <div class="designer-stat-label">Years</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted)">Could not load designers</div>`;
+            }
+        }
+
+        function openHireModal(designerId, name) {
+            selectedDesigner = { id: designerId, name };
+            document.getElementById('hire-modal').classList.add('active');
+        }
+        function closeHireModal() {
+            document.getElementById('hire-modal').classList.remove('active');
+        }
+
+        async function submitRequest() {
+            if (!selectedDesigner) return;
+            const desc = document.getElementById('request-desc').value;
+            const room = document.getElementById('request-room').value;
+            const budget = document.getElementById('request-budget').value;
+
+            if (!desc) {
+                showToast('Please describe your design needs', 'error');
+                return;
+            }
+
+            showToast('Sending request...', 'info');
+            const result = await Api.createDesignRequest({
+                user_id: user.id,
+                designer_id: selectedDesigner.id,
+                description: desc,
+                room_type: room,
+                budget: budget,
+            });
+
+            if (result.status === 'success') {
+                showToast(`Request sent to ${selectedDesigner.name}!`, 'success');
+                closeHireModal();
+            } else {
+                showToast(result.message || 'Failed to send request', 'error');
+            }
+        }
+
+        document.getElementById('hire-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeHireModal();
+        });
+
+        loadDesigners();
+    </script>
+</body>
+</html>

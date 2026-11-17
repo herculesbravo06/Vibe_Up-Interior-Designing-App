@@ -1,0 +1,28 @@
+<?php
+// config/database.php
+
+class Database {
+    // Database credentials
+    private $host = "localhost";
+    private $db_name = "vibe_up";
+    private $username = "root";
+    private $password = ""; // Default XAMPP password
+    public $conn;
+
+    // Get the database connection
+    public function getConnection() {
+        $this->conn = null;
+
+        try {
+            $this->conn = new PDO("mysql:host=" . $this->host . ";dbname=" . $this->db_name, $this->username, $this->password);
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+        } catch(PDOException $exception) {
+            // Log error internally if needed, but don't echo to output
+            error_log("Database Connection Error: " . $exception->getMessage());
+        }
+
+        return $this->conn;
+    }
+}
+?>

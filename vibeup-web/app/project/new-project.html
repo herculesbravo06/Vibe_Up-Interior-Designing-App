@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Project | VibeUp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app.css">
+    <style>
+        .project-type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .type-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-2xl);
+            padding: 32px;
+            cursor: pointer;
+            transition: all 0.4s var(--ease-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+        .type-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent 60%, rgba(201,168,76,0.03));
+            pointer-events: none;
+        }
+        .type-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .type-card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .type-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+        .type-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .type-tag {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-top: 4px;
+        }
+        .type-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .type-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .type-feature {
+            font-size: 11px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.04);
+            color: var(--text-secondary);
+        }
+        .type-arrow {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            font-size: 20px;
+            color: var(--text-dim);
+            transition: all 0.3s;
+        }
+        .type-card:hover .type-arrow { color: var(--accent); transform: translateX(4px); }
+
+        .page-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-muted);
+            cursor: pointer;
+            margin-bottom: 24px;
+            transition: color 0.2s;
+        }
+        .page-back:hover { color: var(--text-primary); }
+
+        .fade-up { opacity: 0; transform: translateY(16px); animation: fadeUp 0.5s var(--ease-out-expo) forwards; }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <div class="main-content" id="main-content">
+            <a class="page-back" onclick="history.back()">← Back</a>
+
+            <h1 style="font-size:1.6rem; font-weight:700; margin-bottom:4px" class="fade-up">Choose Your Method</h1>
+            <p style="font-size:14px; color:var(--text-secondary)" class="fade-up delay-1">How would you like to start your project?</p>
+
+            <div class="project-type-grid">
+                <!-- Generate Room -->
+                <div class="type-card fade-up delay-2" onclick="navigateTo('app/project/dimensions.html?type=room')">
+                    <div class="type-card-header">
+                        <div class="type-icon" style="background: rgba(123,104,238,0.1); color: var(--purple)">🏗️</div>
+                        <div>
+                            <div class="type-title">Generate Room</div>
+                            <div class="type-tag" style="background:rgba(123,104,238,0.15); color:var(--purple)">SINGLE ROOM</div>
+                        </div>
+                    </div>
+                    <p class="type-desc">Enter room dimensions manually and design a single room from scratch. Perfect for redesigning individual spaces.</p>
+                    <div class="type-features">
+                        <span class="type-feature">📐 Custom Dimensions</span>
+                        <span class="type-feature">🪑 Furniture Placement</span>
+                        <span class="type-feature">🎨 Material Picker</span>
+                        <span class="type-feature">🌅 Day/Night Mode</span>
+                    </div>
+                    <span class="type-arrow">→</span>
+                </div>
+
+                <!-- Build House -->
+                <div class="type-card fade-up delay-3" onclick="navigateTo('app/project/dimensions.html?type=house')">
+                    <div class="type-card-header">
+                        <div class="type-icon" style="background: rgba(76,175,80,0.1); color: var(--green)">🏡</div>
+                        <div>
+                            <div class="type-title">Create Whole House</div>
+                            <div class="type-tag" style="background:rgba(76,175,80,0.15); color:var(--green)">FULL LAYOUT</div>
+                        </div>
+                    </div>
+                    <p class="type-desc">Select a BHK layout and manually craft a full house from scratch. Design every room with a unified floor plan.</p>
+                    <div class="type-features">
+                        <span class="type-feature">🏘️ BHK Layouts</span>
+                        <span class="type-feature">📊 Floor Plan View</span>
+                        <span class="type-feature">🔗 Room Connections</span>
+                        <span class="type-feature">🌐 3D Walkthrough</span>
+                    </div>
+                    <span class="type-arrow">→</span>
+                </div>
+                <!-- Commercial Space -->
+                <div class="type-card fade-up delay-3" onclick="navigateTo('app/project/dimensions.html?type=commercial')">
+                    <div class="type-card-header">
+                        <div class="type-icon" style="background: rgba(33,150,243,0.1); color: var(--blue)">🏢</div>
+                        <div>
+                            <div class="type-title">Commercial Space</div>
+                            <div class="type-tag" style="background:rgba(33,150,243,0.15); color:var(--blue)">BUSINESS LAYOUT</div>
+                        </div>
+                    </div>
+                    <p class="type-desc">Design office spaces, retail stores, cafes, and restaurants. Flexible layouts for commercial needs.</p>
+                    <div class="type-features">
+                        <span class="type-feature">💼 Office Zones</span>
+                        <span class="type-feature">🛍️ Retail Setup</span>
+                        <span class="type-feature">🪑 Custom Rooms</span>
+                        <span class="type-feature">📐 Open Layouts</span>
+                    </div>
+                    <span class="type-arrow">→</span>
+                </div>
+            </div>
+
+            <!-- Assistance Options -->
+            <div style="margin-top:40px">
+                <h2 style="font-size:1.2rem; font-weight:600; margin-bottom:16px" class="fade-up delay-3">Need Assistance?</h2>
+                <div class="project-type-grid">
+                    <div class="type-card fade-up delay-3" onclick="navigateTo('app/project/designer-list.html')">
+                        <div class="type-card-header">
+                            <div class="type-icon" style="background: rgba(255,159,67,0.1); color: var(--orange)">👤</div>
+                            <div>
+                                <div class="type-title">Hire a Designer</div>
+                                <div class="type-tag" style="background:rgba(255,159,67,0.15); color:var(--orange)">PROFESSIONAL</div>
+                            </div>
+                        </div>
+                        <p class="type-desc">Browse expert interior designers and let them bring your vision to life with professional design services.</p>
+                        <span class="type-arrow">→</span>
+                    </div>
+
+                    <div class="type-card fade-up delay-3" onclick="navigateTo('app/project/ai-design.html')">
+                        <div class="type-card-header">
+                            <div class="type-icon" style="background: var(--accent-glow); color: var(--accent)">🤖</div>
+                            <div>
+                                <div class="type-title">AI Design Assistant</div>
+                                <div class="type-tag" style="background:var(--accent-glow); color:var(--accent)">AI-POWERED</div>
+                            </div>
+                        </div>
+                        <p class="type-desc">Describe your dream room and let AI generate multiple design concepts instantly. Modify and refine with natural language.</p>
+                        <span class="type-arrow">→</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) { /* redirects */ }
+        const user = Auth.getUser();
+        renderSidebar('new-project', user.role);
+    </script>
+</body>
+</html>

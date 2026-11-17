@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Designer Dashboard | VibeUp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app.css">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            top: -20px;
+            right: -20px;
+            pointer-events: none;
+        }
+
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .section-title { font-size: 1.1rem; font-weight: 600; }
+
+        .activity-list { display: flex; flex-direction: column; }
+
+        .fade-up { opacity: 0; transform: translateY(16px); animation: fadeUp 0.5s var(--ease-out-expo) forwards; }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+        .delay-1 { animation-delay: 0.15s; }
+        .delay-2 { animation-delay: 0.25s; }
+        .delay-3 { animation-delay: 0.35s; }
+        .delay-4 { animation-delay: 0.45s; }
+
+        @media (max-width: 900px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <div class="main-content" id="main-content">
+            <div class="topbar fade-up">
+                <div class="topbar-left">
+                    <h1>Good morning, <span id="designer-name">Designer</span> 🎨</h1>
+                    <p>Your design studio at a glance</p>
+                </div>
+                <div class="topbar-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="navigateTo('app/designer/requests.html')">
+                        📥 Requests
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid fade-up delay-1">
+                <div class="stat-card">
+                    <div class="stat-card-icon" style="background:rgba(123,104,238,0.1); color:var(--purple)">📐</div>
+                    <div class="stat-card-label">Total Projects</div>
+                    <div class="stat-card-value" id="stat-total">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon" style="background:rgba(255,112,67,0.1); color:var(--orange)">⏳</div>
+                    <div class="stat-card-label">Pending Requests</div>
+                    <div class="stat-card-value" id="stat-pending">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon" style="background:rgba(76,175,80,0.1); color:var(--green)">✅</div>
+                    <div class="stat-card-label">Completed</div>
+                    <div class="stat-card-value" id="stat-completed">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon" style="background:var(--accent-glow); color:var(--accent)">⭐</div>
+                    <div class="stat-card-label">Rating</div>
+                    <div class="stat-card-value" id="stat-rating">0/5</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="section-header fade-up delay-2">
+                <div class="section-title">Quick Actions</div>
+            </div>
+            <div class="quick-actions-grid fade-up delay-2">
+                <div class="action-card" onclick="navigateTo('app/designer/projects.html')">
+                    <div class="action-card-icon" style="background:rgba(123,104,238,0.1); color:var(--purple)">📁</div>
+                    <div class="action-card-title">My Projects</div>
+                </div>
+                <div class="action-card" onclick="navigateTo('app/designer/requests.html')">
+                    <div class="action-card-icon" style="background:rgba(255,112,67,0.1); color:var(--orange)">📥</div>
+                    <div class="action-card-title">Manage Requests</div>
+                </div>
+                <div class="action-card" onclick="navigateTo('app/designer/completed.html')">
+                    <div class="action-card-icon" style="background:rgba(76,175,80,0.1); color:var(--green)">✔️</div>
+                    <div class="action-card-title">Finished</div>
+                </div>
+                <div class="action-card" onclick="navigateTo('app/designer/feedback.html')">
+                    <div class="action-card-icon" style="background:rgba(41,182,246,0.1); color:var(--cyan)">💬</div>
+                    <div class="action-card-title">Feedback</div>
+                </div>
+                <div class="action-card" onclick="navigateTo('app/designer/ai-chat.html')">
+                    <div class="action-card-icon" style="background:var(--accent-glow); color:var(--accent)">✨</div>
+                    <div class="action-card-title">AI Assistant</div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="section-header fade-up delay-3">
+                <div class="section-title">Recent Activity</div>
+                <button class="btn btn-ghost btn-sm" onclick="showToast('All activities page coming soon', 'info')">View All</button>
+            </div>
+            <div class="activity-list fade-up delay-4" id="activity-list">
+                <div style="text-align:center; padding:32px; color:var(--text-muted)">
+                    <div class="spinner" style="margin:0 auto 12px"></div>
+                    Loading activity...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script src="/scratch/vibeup-backend/node_modules/socket.io/client-dist/socket.io.min.js" onerror="console.warn('Socket.IO not available locally')"></script>
+    <script>
+        if (!Auth.requireAuth()) {}
+        const user = Auth.getUser();
+        document.getElementById('designer-name').textContent = user.name;
+
+        // Render sidebar in designer mode
+        renderSidebar('home', 'designer');
+
+        // Start heartbeat
+        Auth.startHeartbeat();
+
+        const designerId = user.designerId || user.id;
+
+        // Load stats
+        async function loadStats() {
+            const result = await Api.getDesignerStats(designerId);
+            if (result.status === 'success' && result.data) {
+                const d = result.data;
+                document.getElementById('stat-total').textContent = d.total_projects || 0;
+                document.getElementById('stat-pending').textContent = d.pending_requests || 0;
+                document.getElementById('stat-completed').textContent = d.completed_projects || 0;
+                document.getElementById('stat-rating').textContent = (d.rating || 0) + '/5';
+            }
+        }
+        
+        // Load activity
+        async function loadActivity() {
+            const listEl = document.getElementById('activity-list');
+            try {
+                const result = await Api.getNotifications(designerId);
+                const notifs = Array.isArray(result) ? result
+                             : (result.data && Array.isArray(result.data)) ? result.data : [];
+
+                if (notifs.length === 0) {
+                    listEl.innerHTML = '<div style="text-align:center; padding:32px; color:var(--text-muted)">No recent activity</div>';
+                    return;
+                }
+
+                listEl.innerHTML = notifs.slice(0, 5).map(n => {
+                    const icons = { 'request_new': '📥', 'request_accepted': '✅', 'message_new': '💬' };
+                    return `
+                        <div class="activity-item" onclick="handleActivityClick('${n.type || ''}')">
+                            <div class="activity-icon" style="background:var(--accent-glow); color:var(--accent)">${icons[n.type] || '🔔'}</div>
+                            <div class="activity-text">
+                                <div class="activity-title">${escapeHtml(n.title || 'Notification')}</div>
+                                <div class="activity-time">${timeAgo(n.created_at)}</div>
+                            </div>
+                            <span style="color:var(--text-dim)">→</span>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                listEl.innerHTML = '<div style="text-align:center; padding:32px; color:var(--text-muted)">Could not load activity</div>';
+            }
+        }
+
+        // INITIAL LOAD
+        loadStats();
+        loadActivity();
+
+        // REAL-TIME UPDATES VIA SOCKET.IO
+        const socketUrl = window.location.protocol + '//' + (window.location.hostname || 'localhost') + ':5000';
+        const socket = (typeof io !== 'undefined') ? io(socketUrl) : { on: () => {}, emit: () => {} };
+        
+        socket.on('connect', () => {
+            console.log('✅ Connected to Real-time Sync Server');
+            showToast('Real-time sync active', 'success');
+        });
+
+        // Listen for ANY activity relevant to this designer or global
+        socket.on('global_activity', (data) => {
+            console.log('⚡ Real-time Activity:', data);
+            // Refresh stats and activity list immediately
+            loadStats();
+            loadActivity();
+            
+            if (data.type === 'layout_updated') {
+                showToast(`Project ${data.projectId} room layout updated!`, 'info');
+            }
+        });
+
+        socket.on('disconnect', () => {
+            console.warn('❌ Disconnected from Sync Server');
+        });
+
+        function handleActivityClick(type) {
+            if (type === 'message_new') navigateTo('app/chat/index.html');
+            else navigateTo('app/designer/requests.html');
+        }
+    </script>
+</body>
+</html>

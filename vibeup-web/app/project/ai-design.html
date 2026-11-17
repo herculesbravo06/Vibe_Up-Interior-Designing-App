@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Design Studio | VibeUp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app.css">
+    <style>
+        .hero-section { text-align: center; padding: 48px 0 40px; }
+        .hero-icon { font-size: 56px; margin-bottom: 16px; filter: drop-shadow(0 0 24px rgba(201,168,76,0.4)); animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        .hero-title { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+        .hero-subtitle { color: var(--text-secondary); font-size: 15px; max-width: 520px; margin: 0 auto; line-height: 1.6; }
+
+        .studio-form { max-width: 620px; margin: 0 auto; }
+        .prompt-box { background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--radius-2xl); padding: 28px; margin-bottom: 28px; }
+        .prompt-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .prompt-textarea { width: 100%; background: var(--bg-input); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 16px; font-size: 15px; color: var(--text-primary); font-family: 'Inter', sans-serif; resize: vertical; min-height: 100px; outline: none; transition: border-color 0.3s; }
+        .prompt-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+        .prompt-textarea::placeholder { color: var(--text-dim); }
+
+        .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+        .option-card { background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); padding: 20px; }
+        .option-card label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; display: block; }
+        .option-card select { width: 100%; background: var(--bg-input); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 10px 14px; font-size: 14px; color: var(--text-primary); outline: none; cursor: pointer; }
+
+        .style-chips { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 28px; }
+        .style-chip { padding: 10px 18px; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 20px; font-size: 13px; color: var(--text-secondary); cursor: pointer; transition: all 0.25s; }
+        .style-chip:hover { border-color: rgba(201,168,76,0.4); color: var(--accent); }
+        .style-chip.selected { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+        .generate-btn { width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #0a0a0a; border: none; padding: 16px; border-radius: var(--radius-xl); font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .generate-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(201,168,76,0.3); }
+        .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .result-card { background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--radius-2xl); padding: 28px; margin-top: 28px; display: none; animation: fadeUp 0.5s ease-out; }
+        .result-card.visible { display: block; }
+        .result-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+        .result-rooms { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .result-room { background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 14px; text-align: center; }
+        .result-room-icon { font-size: 24px; margin-bottom: 6px; }
+        .result-room-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+        .result-room-dims { font-size: 11px; color: var(--text-muted); }
+
+        .fade-up { opacity: 0; transform: translateY(16px); animation: fadeUp 0.5s ease-out forwards; }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <div class="main-content">
+            <a class="page-back" onclick="history.back()" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--text-muted); cursor:pointer; margin-bottom:20px">← Back</a>
+
+            <div class="hero-section fade-up">
+                <div class="hero-icon">✨</div>
+                <h1 class="hero-title">AI Design Studio</h1>
+                <p class="hero-subtitle">Describe your dream space and let AI generate a complete room configuration with furniture suggestions — then open it directly in the 3D editor.</p>
+            </div>
+
+            <div class="studio-form">
+                <div class="prompt-box fade-up" style="animation-delay:0.1s">
+                    <div class="prompt-label">💭 Describe Your Vision</div>
+                    <textarea class="prompt-textarea" id="ai-prompt" placeholder="e.g., A cozy minimalist living room with warm wood tones, a large window, and space for a home office corner..."></textarea>
+                </div>
+
+                <div class="option-grid fade-up" style="animation-delay:0.15s">
+                    <div class="option-card">
+                        <label>🏠 Room Type</label>
+                        <select id="room-type">
+                            <option value="living">Living Room</option>
+                            <option value="bedroom">Bedroom</option>
+                            <option value="kitchen">Kitchen</option>
+                            <option value="dining">Dining Room</option>
+                            <option value="office">Home Office</option>
+                            <option value="bathroom">Bathroom</option>
+                            <option value="studio">Studio Apartment</option>
+                        </select>
+                    </div>
+                    <div class="option-card">
+                        <label>📐 Room Size</label>
+                        <select id="room-size">
+                            <option value="small">Small (10×10 ft)</option>
+                            <option value="medium" selected>Medium (14×12 ft)</option>
+                            <option value="large">Large (18×16 ft)</option>
+                            <option value="xl">Extra Large (22×20 ft)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="fade-up" style="animation-delay:0.2s">
+                    <div class="prompt-label">🎨 Design Style</div>
+                    <div class="style-chips" id="style-chips">
+                        <div class="style-chip selected" onclick="selectStyle(this)">Modern</div>
+                        <div class="style-chip" onclick="selectStyle(this)">Minimalist</div>
+                        <div class="style-chip" onclick="selectStyle(this)">Scandinavian</div>
+                        <div class="style-chip" onclick="selectStyle(this)">Industrial</div>
+                        <div class="style-chip" onclick="selectStyle(this)">Bohemian</div>
+                        <div class="style-chip" onclick="selectStyle(this)">Luxury</div>
+                        <div class="style-chip" onclick="selectStyle(this)">Traditional</div>
+                        <div class="style-chip" onclick="selectStyle(this)">Japandi</div>
+                    </div>
+                </div>
+
+                <button class="generate-btn fade-up" style="animation-delay:0.25s" id="generate-btn" onclick="generateDesign()">
+                    <span>✨</span> Generate AI Design
+                </button>
+
+                <div class="result-card" id="result-card">
+                    <div class="result-title">✨ AI Design Generated</div>
+                    <p id="result-desc" style="font-size:14px; color:var(--text-secondary); margin-bottom:16px; line-height:1.5"></p>
+                    <div class="result-rooms" id="result-rooms"></div>
+                    <button class="btn btn-primary btn-lg" style="width:100%" onclick="openInWorkspace()">🔧 Open in 3D Editor</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) {}
+        const user = Auth.getUser();
+        renderSidebar('home', user.role === 'designer' ? 'designer' : 'user');
+
+        let selectedStyle = 'Modern';
+        let generatedConfig = null;
+
+        function selectStyle(el) {
+            document.querySelectorAll('.style-chip').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedStyle = el.textContent;
+        }
+
+        const ROOM_CONFIGS = {
+            living: {
+                name: 'Living Room', icon: '🛋️',
+                furniture: {
+                    Modern: ['sofa', 'table', 'tv_stand', 'floor_lamp', 'bookshelf'],
+                    Minimalist: ['sofa', 'table', 'floor_lamp'],
+                    Scandinavian: ['sofa', 'armchair', 'table', 'bookshelf', 'floor_lamp'],
+                    Industrial: ['sofa', 'table', 'bookshelf', 'floor_lamp', 'desk_lamp'],
+                    Bohemian: ['sofa', 'armchair', 'table', 'bookshelf', 'floor_lamp', 'bush'],
+                    Luxury: ['sofa', 'sectional', 'table', 'tv_stand', 'chandelier', 'bookshelf'],
+                    Traditional: ['sofa', 'armchair', 'table', 'tv_stand', 'bookshelf'],
+                    Japandi: ['sofa', 'table', 'floor_lamp', 'bush'],
+                },
+                floor: { Modern: 'tile', Minimalist: 'concrete', Scandinavian: 'light_ash', Industrial: 'concrete', Bohemian: 'wood', Luxury: 'marble', Traditional: 'wood', Japandi: 'bamboo' },
+                wall: { Modern: '#f5f0e8', Minimalist: '#faf8f5', Scandinavian: '#faf8f5', Industrial: '#3a3a3a', Bohemian: '#e8dcd0', Luxury: '#1a1a2e', Traditional: '#f0ebe0', Japandi: '#e8dcd0' }
+            },
+            bedroom: {
+                name: 'Bedroom', icon: '🛏️',
+                furniture: {
+                    Modern: ['bed', 'nightstand', 'wardrobe', 'desk_lamp'],
+                    Minimalist: ['bed', 'nightstand', 'floor_lamp'],
+                    Scandinavian: ['bed', 'nightstand', 'wardrobe', 'floor_lamp'],
+                    Industrial: ['bed', 'nightstand', 'dresser', 'desk_lamp'],
+                    Bohemian: ['bed', 'nightstand', 'dresser', 'floor_lamp', 'bush'],
+                    Luxury: ['bed', 'nightstand', 'wardrobe', 'vanity', 'chandelier'],
+                    Traditional: ['bed', 'nightstand', 'wardrobe', 'dresser'],
+                    Japandi: ['bed', 'nightstand', 'floor_lamp'],
+                },
+                floor: { Modern: 'wood', Minimalist: 'light_ash', Scandinavian: 'light_ash', Industrial: 'concrete', Bohemian: 'carpet', Luxury: 'dark_walnut', Traditional: 'wood', Japandi: 'bamboo' },
+                wall: { Modern: '#e8dcd0', Minimalist: '#faf8f5', Scandinavian: '#faf8f5', Industrial: '#3a3a3a', Bohemian: '#c4a0a0', Luxury: '#2a1a3a', Traditional: '#f0ebe0', Japandi: '#e8dcd0' }
+            },
+            kitchen: {
+                name: 'Kitchen', icon: '🍳',
+                furniture: {
+                    Modern: ['kitchen_island', 'kitchen_cabinet', 'fridge', 'bar_stool'],
+                    Minimalist: ['kitchen_cabinet', 'fridge', 'bar_stool'],
+                    default: ['kitchen_island', 'kitchen_cabinet', 'fridge', 'bar_stool', 'oven'],
+                },
+                floor: { default: 'tile' },
+                wall: { default: '#faf8f5' }
+            },
+            dining: {
+                name: 'Dining Room', icon: '🍽️',
+                furniture: { default: ['dining_table', 'dining_chair', 'dining_chair', 'sideboard', 'chandelier'] },
+                floor: { default: 'wood' },
+                wall: { default: '#f5f0e8' }
+            },
+            office: {
+                name: 'Home Office', icon: '💼',
+                furniture: { default: ['desk', 'office_chair', 'bookshelf', 'desk_lamp'] },
+                floor: { default: 'wood' },
+                wall: { default: '#f5f0e8' }
+            },
+            bathroom: {
+                name: 'Bathroom', icon: '🚿',
+                furniture: { default: ['bathtub', 'vanity'] },
+                floor: { default: 'tile' },
+                wall: { default: '#faf8f5' }
+            },
+            studio: {
+                name: 'Studio Apartment', icon: '🏙️',
+                furniture: { default: ['bed', 'sofa', 'desk', 'bookshelf', 'kitchen_cabinet', 'fridge', 'floor_lamp'] },
+                floor: { default: 'wood' },
+                wall: { default: '#f5f0e8' }
+            }
+        };
+
+        const SIZE_MAP = { small: { w: 10, l: 10, h: 10 }, medium: { w: 14, l: 12, h: 10 }, large: { w: 18, l: 16, h: 10 }, xl: { w: 22, l: 20, h: 12 } };
+
+        function generateDesign() {
+            const prompt = document.getElementById('ai-prompt').value.trim();
+            const roomType = document.getElementById('room-type').value;
+            const roomSize = document.getElementById('room-size').value;
+            const btn = document.getElementById('generate-btn');
+
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner" style="width:20px; height:20px; border-width:2px"></div> Generating...';
+
+            setTimeout(() => {
+                const config = ROOM_CONFIGS[roomType];
+                const dims = SIZE_MAP[roomSize];
+                const furnitureList = config.furniture[selectedStyle] || config.furniture.default || config.furniture.Modern;
+                const floor = config.floor[selectedStyle] || config.floor.default;
+                const wall = config.wall[selectedStyle] || config.wall.default;
+
+                generatedConfig = {
+                    name: `${selectedStyle} ${config.name}`,
+                    roomType,
+                    style: selectedStyle,
+                    dims,
+                    furniture: furnitureList,
+                    floorMat: floor,
+                    wallColor: wall,
+                    prompt
+                };
+
+                // Show result
+                document.getElementById('result-desc').textContent =
+                    `A ${selectedStyle.toLowerCase()} ${config.name.toLowerCase()} design with ${furnitureList.length} furniture pieces, ${floor} flooring, and coordinated wall colors. ${dims.w}×${dims.l}×${dims.h} ft room.`;
+
+                document.getElementById('result-rooms').innerHTML = furnitureList.map(f => `
+                    <div class="result-room">
+                        <div class="result-room-icon">${config.icon}</div>
+                        <div class="result-room-name">${f.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
+                    </div>
+                `).join('');
+
+                const resultCard = document.getElementById('result-card');
+                resultCard.classList.add('visible');
+                resultCard.scrollIntoView({ behavior: 'smooth' });
+
+                btn.disabled = false;
+                btn.innerHTML = '<span>✨</span> Regenerate Design';
+            }, 1500);
+        }
+
+        function openInWorkspace() {
+            if (!generatedConfig) return;
+            const c = generatedConfig;
+            const furnJSON = encodeURIComponent(JSON.stringify(c.furniture));
+            const url = `workspace.html?name=${encodeURIComponent(c.name)}&w=${c.dims.w}&l=${c.dims.l}&h=${c.dims.h}&floor=${c.floorMat}&wall=${encodeURIComponent(c.wallColor)}&auto_furnish=${furnJSON}`;
+            navigateTo('app/project/' + url);
+        }
+    </script>
+</body>
+</html>

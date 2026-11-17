@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>360° VR Tours | VibeUp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app.css">
+    <style>
+        .page-header { margin-bottom: 32px; border-bottom: 1px solid var(--glass-border); padding-bottom: 24px; }
+        .page-title { font-size: 28px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; letter-spacing: -0.02em; }
+        .page-desc { color: var(--text-secondary); font-size: 15px; }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .category-card {
+            background: #0f1115;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .category-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(201,168,76,0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .category-card:hover { 
+            transform: scale(1.02); 
+            border-color: rgba(201,168,76,0.5);
+            background: #15181e;
+        }
+        .category-card:hover::after { opacity: 1; }
+
+        .cat-icon-container {
+            width: 64px; height: 64px;
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            flex-shrink: 0;
+        }
+
+        .cat-info { flex: 1; }
+        .cat-title { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+        .cat-desc { font-size: 13px; color: rgba(255,255,255,0.4); line-height: 1.4; margin-bottom: 8px; }
+        
+        .room-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(201,168,76,0.15);
+            color: #c9a84c;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .cat-arrow { color: rgba(255,255,255,0.2); font-size: 18px; transition: transform 0.3s; }
+        .category-card:hover .cat-arrow { transform: translateX(5px); color: #c9a84c; }
+
+        .fade-up { opacity: 0; transform: translateY(20px); animation: fadeUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <div class="main-content">
+            <div class="page-header fade-up">
+                <a class="page-back" onclick="history.back()" style="display:inline-flex; align-items:center; gap:8px; font-size:13px; color:rgba(255,255,255,0.4); cursor:pointer; margin-bottom:20px; text-decoration:none;">
+                    <span style="font-size:18px">←</span> Back to Dashboard
+                </a>
+                <h1 class="page-title">Experience 360°</h1>
+                <p class="page-desc">Explore photorealistic architectural layouts optimized for VibeUp Design Vision.</p>
+            </div>
+
+            <div class="categories-grid">
+                <a class="category-card fade-up" style="animation-delay: 0.1s" href="tour.html?type=1bhk">
+                    <div class="cat-icon-container">🏠</div>
+                    <div class="cat-info">
+                        <div class="cat-title">1 BHK Apartment</div>
+                        <div class="cat-desc">Compact & functional living</div>
+                        <div class="room-badge">4 Rooms</div>
+                    </div>
+                    <div class="cat-arrow">→</div>
+                </a>
+                
+                <a class="category-card fade-up" style="animation-delay: 0.15s" href="tour.html?type=2bhk">
+                    <div class="cat-icon-container">🏡</div>
+                    <div class="cat-info">
+                        <div class="cat-title">2 BHK Apartment</div>
+                        <div class="cat-desc">Perfect for small families</div>
+                        <div class="room-badge">5 Rooms</div>
+                    </div>
+                    <div class="cat-arrow">→</div>
+                </a>
+
+                <a class="category-card fade-up" style="animation-delay: 0.2s" href="tour.html?type=3bhk">
+                    <div class="cat-icon-container">🏢</div>
+                    <div class="cat-info">
+                        <div class="cat-title">3 BHK Apartment</div>
+                        <div class="cat-desc">Spacious urban living</div>
+                        <div class="room-badge">6 Rooms</div>
+                    </div>
+                    <div class="cat-arrow">→</div>
+                </a>
+
+                <a class="category-card fade-up" style="animation-delay: 0.25s" href="tour.html?type=4bhk">
+                    <div class="cat-icon-container">🏰</div>
+                    <div class="cat-info">
+                        <div class="cat-title">4 BHK Premium</div>
+                        <div class="cat-desc">Luxury family residence</div>
+                        <div class="room-badge">8 Rooms</div>
+                    </div>
+                    <div class="cat-arrow">→</div>
+                </a>
+
+                <a class="category-card fade-up" style="animation-delay: 0.3s" href="tour.html?type=5bhk">
+                    <div class="cat-icon-container">🏛️</div>
+                    <div class="cat-info">
+                        <div class="cat-title">5 BHK Villa</div>
+                        <div class="cat-desc">Expansive grand living</div>
+                        <div class="room-badge">10 Rooms</div>
+                    </div>
+                    <div class="cat-arrow">→</div>
+                </a>
+
+                <a class="category-card fade-up" style="animation-delay: 0.35s" href="tour.html?type=commercial">
+                    <div class="cat-icon-container">🏢</div>
+                    <div class="cat-info">
+                        <div class="cat-title">Commercial Space</div>
+                        <div class="cat-desc">Modern office layouts</div>
+                        <div class="room-badge">12 Zones</div>
+                    </div>
+                    <div class="cat-arrow">→</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="../app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) {}
+        const user = Auth.getUser();
+        renderSidebar('home', user.role);
+    </script>
+</body>
+</html>
